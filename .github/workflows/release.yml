@@ -1,20 +1,35 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   release:
-    name: Build and Publish Release Artifact
+    name: Bump Version and Publish Release Artifact
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.actor.login != 'github-actions[bot]' &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip release]')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Set up JDK 26
         uses: actions/setup-java@v4
@@ -106,8 +121,7 @@ jobs:
         run: mvn -B -ntp -DskipTests package
 
       - name: Create checksums
-        run: |
-          sha256sum target/*.jar > target/sha256sums.txt
+        run: sha256sum target/*.jar > target/sha256sums.txt
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
