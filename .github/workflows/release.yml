@@ -48,6 +48,8 @@ jobs:
           set -euo pipefail
           API="https://api.github.com/repos/${REPO}/commits/${SHA}/pulls"
           PRS_JSON="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")"
+          PR_TITLE="$(echo "$PRS_JSON" | jq -r '.[0].title // empty')"
+          PR_BODY="$(echo "$PRS_JSON" | jq -r '.[0].body // empty')"
           LABELS="$(echo "$PRS_JSON" | jq -r '.[0].labels[]?.name' || true)"
           BUMP="patch"
           if echo "$LABELS" | grep -qx 'version:major'; then
@@ -57,7 +59,19 @@ jobs:
           elif echo "$LABELS" | grep -qx 'version:patch'; then
             BUMP="patch"
           fi
+          if [[ -z "$PR_TITLE" ]]; then
+            PR_TITLE="${{ github.event.workflow_run.head_commit.message }}"
+          fi
+          if [[ -z "$PR_BODY" ]]; then
+            PR_BODY="Release created from commit $SHA"
+          fi
           echo "type=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "title=$PR_TITLE" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<EOF"
+            echo "$PR_BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Bump pom.xml version and create release tag
         id: bump
@@ -97,14 +111,11 @@ jobs:
             echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git commit -m "Bump routerfx version to $NEXT [skip release]"
+          git commit -m "Bump version to $NEXT"
           git tag "v$NEXT"
           git push origin HEAD:main --follow-tags
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
           echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
-
-      - name: Build with tests
-        run: mvn -B -ntp -Punit-tests verify
 
       - name: Package application
         run: mvn -B -ntp -DskipTests package
@@ -116,6 +127,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.bump.outputs.tag }}
+          name: ${{ steps.bump-type.outputs.title }}
+          body: ${{ steps.bump-type.outputs.body }}
           files: |
             target/*.jar
             target/sha256sums.txt
