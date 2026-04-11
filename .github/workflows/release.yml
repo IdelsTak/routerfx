@@ -118,12 +118,14 @@ jobs:
         run: sha256sum target/*.jar > target/sha256sums.txt
 
       - name: Generate changelog file
+        env:
+          CHANGELOG_TITLE: ${{ steps.bump-type.outputs.title }}
+          CHANGELOG_BODY: ${{ steps.bump-type.outputs.body }}
         run: |
           echo "# Changelog" > changelog.md
           echo "" >> changelog.md
-          echo "## ${{ steps.bump-type.outputs.title }}" >> changelog.md
-          echo "" >> changelog.md
-          echo "${{ steps.bump-type.outputs.body }}" >> changelog.md
+          printf '## %s\n\n' "$CHANGELOG_TITLE" >> changelog.md
+          printf '%s\n' "$CHANGELOG_BODY" >> changelog.md
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
