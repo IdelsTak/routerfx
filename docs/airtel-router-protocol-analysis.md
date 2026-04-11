@@ -1,5 +1,7 @@
 # Airtel Router Web UI Protocol Reconstruction (HAR + JS Evidence)
 
+Implementation context: [RouterFX JavaFX App Unified Architecture](./javafx-unified-architecture.md)
+
 ## Request sequence
 
 From login page load to first authenticated dashboard data (`cmd:205`), based on HAR entry order:
@@ -237,4 +239,3 @@ Evidence for boundary separation:
    - `{"cmd":205,"method":"GET","language":"en","sessionId":"9a86cd1b7e47060df9c4c25d82286cdd7f123ca826b106f34295a32e046a8532"}`
 6. HAR `43` response body (`cmd:205`):
    - JSON object with `success:true`, `cmd:205`, and network/radio metrics (`RSRP`, `RSSI`, `RSRQ`, `SINR`, `PLMN`, `flow_dl`, `onlineTime`, etc.).
-

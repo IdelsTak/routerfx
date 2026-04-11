@@ -1,5 +1,7 @@
 # Minimal Java Proof Client Details (HAR + JS Only)
 
+Implementation context: [RouterFX JavaFX App Unified Architecture](./javafx-unified-architecture.md)
+
 ## 1. Minimal login contract
 
 ### `cmd:232` (challenge)
@@ -198,4 +200,3 @@ For a minimal Java client, safest required parse set is envelope (`success`,`cmd
    - [main.js:1485](/home/kamau/MEGA/routerfx-dev/main.js:1485)-[main.js:1501](/home/kamau/MEGA/routerfx-dev/main.js:1501)
 6. Session timeout handling:
    - [main.js:1490](/home/kamau/MEGA/routerfx-dev/main.js:1490)-[main.js:1495](/home/kamau/MEGA/routerfx-dev/main.js:1495)
-
