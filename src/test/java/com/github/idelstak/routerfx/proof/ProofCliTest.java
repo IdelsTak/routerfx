@@ -137,4 +137,35 @@ final class ProofCliTest {
         }
         assertThat("Expected mutable password buffer to be cleared after run", allCleared.get(), is(true));
     }
+
+    @Test
+    void doesNotPrintPasswordWhenLoginFails() {
+        var outBytes = new ByteArrayOutputStream();
+        var errBytes = new ByteArrayOutputStream();
+        var secret = "s3cr3t";
+        var cli = new ProofCli(
+          (username, err) -> secret.toCharArray(),
+          baseUrl -> new RouterApi() {
+            @Override
+            public Challenge fetchChallenge() {
+                return new Challenge("token");
+            }
+
+            @Override
+            public Session login(Credentials credentials, Challenge challenge) {
+                throw new RouterProtocolException("Login failed for password " + credentials.password());
+            }
+
+            @Override
+            public RadioState fetchRadioState(Session session) {
+                throw new AssertionError("Expected no radio fetch after login failure");
+            }
+        },
+          new PrintStream(outBytes, true, StandardCharsets.UTF_8),
+          new PrintStream(errBytes, true, StandardCharsets.UTF_8)
+        );
+        cli.run(new String[]{"http://192.168.1.1", "admin"});
+        var errText = errBytes.toString(StandardCharsets.UTF_8);
+        assertThat("Expected secret to stay out of error output", errText, not(containsString(secret)));
+    }
 }
