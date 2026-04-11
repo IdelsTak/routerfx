@@ -1,47 +1,60 @@
 package com.github.idelstak.routerfx.router.protocol;
 
 import com.fasterxml.jackson.databind.*;
+import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 
 final class RouterProtocolResponses {
 
-    Challenge toChallenge(JsonNode node) {
-        return new Challenge(requiredText(node, "token"));
+    Result<Challenge> challenge(JsonNode node) {
+        return required(node, "token").map(Challenge::new);
     }
 
-    Session toSession(JsonNode node) {
+    Result<Session> session(JsonNode node) {
         if ("fail".equals(node.path("login_fail").asText()) || "fail".equals(node.path("login_fail2").asText())) {
-            throw new RouterProtocolException("Login rejected: " + node);
+            return new Result.Failure<>(new RouterFault.AuthFault("Login rejected by router"));
         }
-        return new Session(requiredText(node, "sessionId"));
+        return required(node, "sessionId").map(Session::new);
     }
 
-    RadioState toRadioState(JsonNode node) {
-        return new RadioState(
-          requiredText(node, "network_operator"),
-          requiredText(node, "network_type_str"),
-          requiredText(node, "RSRP"),
-          requiredText(node, "RSSI"),
-          requiredText(node, "RSRQ"),
-          requiredText(node, "SINR"),
-          requiredText(node, "currentband"),
-          requiredText(node, "bandwidth"),
-          requiredText(node, "flow_dl"),
-          requiredText(node, "flow_ul"),
-          requiredText(node, "onlineTime"),
-          requiredText(node, "onlineDuration")
-        );
+    Result<RadioState> radio(JsonNode node) {
+        return required(node, "network_operator").flatMap(networkOperator ->
+                required(node, "network_type_str").flatMap(networkTypeStr ->
+                required(node, "RSRP").flatMap(rsrp ->
+                required(node, "RSSI").flatMap(rssi ->
+                required(node, "RSRQ").flatMap(rsrq ->
+                required(node, "SINR").flatMap(sinr ->
+                required(node, "currentband").flatMap(currentBand ->
+                required(node, "bandwidth").flatMap(bandwidth ->
+                required(node, "flow_dl").flatMap(flowDl ->
+                required(node, "flow_ul").flatMap(flowUl ->
+                required(node, "onlineTime").flatMap(onlineTime ->
+                required(node, "onlineDuration").map(onlineDuration ->
+                    new RadioState(
+                            networkOperator,
+                            networkTypeStr,
+                            rsrp,
+                            rssi,
+                            rsrq,
+                            sinr,
+                            currentBand,
+                            bandwidth,
+                            flowDl,
+                            flowUl,
+                            onlineTime,
+                            onlineDuration
+                    )))))))))))));
     }
 
-    private String requiredText(JsonNode node, String fieldName) {
+    private Result<String> required(JsonNode node, String fieldName) {
         var value = node.get(fieldName);
         if (value == null || value.isNull()) {
-            throw new RouterProtocolException("Missing required field: " + fieldName + " in " + node);
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Missing required field: " + fieldName));
         }
         var text = value.asText();
         if (text == null || text.isBlank()) {
-            throw new RouterProtocolException("Blank required field: " + fieldName + " in " + node);
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Blank required field: " + fieldName));
         }
-        return text;
+        return new Result.Success<>(text);
     }
 }

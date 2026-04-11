@@ -42,22 +42,24 @@ Do not use `Result<T>` for:
 ## Contract Shape
 
 ```java
-public sealed interface Result<T> permits Success, Failure {}
-
-public record Success<T>(T value) implements Result<T> {}
-
-public record Failure<T>(RouterError error) implements Result<T> {}
+public sealed interface Result<T> {
+    <U> U fold(Function<T, U> success, Function<RouterFault, U> failure);
+    <U> Result<U> map(Function<T, U> mapper);
+    <U> Result<U> flatMap(Function<T, Result<U>> mapper);
+    record Success<T>(T value) implements Result<T> {}
+    record Failure<T>(RouterFault fault) implements Result<T> {}
+}
 ```
 
 ```java
-public sealed interface RouterError permits
-    AuthError,
-    SessionExpiredError,
-    TimeoutError,
-    TransportError,
-    ProtocolError,
-    MalformedResponseError,
-    UnsupportedCommandError {}
+public sealed interface RouterFault permits
+    RouterFault.AuthFault,
+    RouterFault.SessionExpiredFault,
+    RouterFault.TimeoutFault,
+    RouterFault.TransportFault,
+    RouterFault.ProtocolFault,
+    RouterFault.MalformedResponseFault,
+    RouterFault.UnsupportedCommandFault {}
 ```
 
 Use typed errors. Do not use `Failure<String>`.
@@ -91,13 +93,27 @@ It does not leak raw transport exceptions outside the boundary.
 
 Effects convert boundary `Result` to messages:
 
-- `Success<Session>` -> `LoginSucceeded`
-- `Failure<AuthError>` -> `LoginFailed(AuthRejected)`
-- `Failure<TimeoutError>` -> `LoginFailed(Timeout)`
-- `Success<RadioState>` -> `DashboardLoaded`
-- `Failure<SessionExpiredError>` -> `DashboardLoadFailed(SessionExpired)`
+- `Result.Success<Session>` -> `LoginSucceeded`
+- `Result.Failure<Session>` with `AuthFault` -> `LoginFailed(AuthRejected)`
+- `Result.Failure<Session>` with `TimeoutFault` -> `LoginFailed(Timeout)`
+- `Result.Success<RadioState>` -> `DashboardLoaded`
+- `Result.Failure<RadioState>` with `SessionExpiredFault` -> `DashboardLoadFailed(SessionExpired)`
 
 Update logic remains pure and deterministic. No exception handling inside update transitions.
+
+## Composition Rule
+
+Use `map` for success-value transformation, `flatMap` for boundary chaining, and `fold` at the edge to select the final output.
+
+Current RouterFX chain style:
+
+```java
+api.fetchChallenge()
+  .flatMap(challenge -> api.login(credentials, challenge))
+  .flatMap(api::fetchRadioState);
+```
+
+At UI/CLI edges, keep decision and side effects separate by mapping to an intermediate outcome in `fold`, then reporting in a second step.
 
 ## Testing Guidance
 
@@ -112,21 +128,16 @@ For MVU effects, test:
 - `Result` to `Msg` mapping
 - retry/reconnect policy decisions by error type
 
-## Migration Plan (Current Proof Client)
-
-1. Add `Result` and typed `RouterError` contracts in the shared boundary package.
-2. Refactor `HttpRouterApi` to return `Result` and map all expected transport/protocol outcomes.
-3. Refactor `ProofCli` to switch on `Result` instead of catch-all boundary handling.
-4. Keep constructor/value-object validation as exceptions.
-5. Add targeted unit tests for each `Failure` variant.
-
 ## Current Status
 
 As of the current implementation state:
 
 - package split toward vertical slices is in place (`shell.app`, `router.protocol`, `shared.value`, feature boundary packages)
 - login/dashboard protocol command handling (`cmd:232`, `cmd:100`, `cmd:205`) is centralized at the protocol edge
-- typed `Result<T>` boundary return contracts are documented and planned, but not yet fully implemented in boundary interfaces
+- boundary interfaces return `Result<T>` for challenge, login, and dashboard reads
+- protocol adapter maps transport/parsing/envelope failures to typed `RouterFault` values
+- Proof CLI composes boundary calls with `flatMap` and resolves to CLI outcomes via `fold`
+- unit tests cover both success and failure mapping for the boundary methods
 
 ## Non-Goals
 

@@ -199,7 +199,7 @@ For multi-call workflows, use structured concurrency and convert completion/fail
 ## Error and Recovery Strategy
 
 - Parse protocol envelope at adapter boundary.
-- Convert boundary outcomes to `Result<T>` with typed `RouterError` variants.
+- Convert boundary outcomes to `Result<T>` with typed `RouterFault` variants.
 - Do not leak transport exceptions across boundary interfaces.
 - Dispatch failure messages (`LoginFailed`, `DashboardLoadFailed`) and render user-facing state.
 - Never swallow invariant exceptions; enrich and fail fast where object validity is broken.

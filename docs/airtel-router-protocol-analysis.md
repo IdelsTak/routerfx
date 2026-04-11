@@ -188,7 +188,7 @@ Minimal Java client for login + `cmd:205` only:
    - `Session{sessionId, auth, userLevel}` (fields beyond `sessionId` optional if returned)
    - `Cmd205Response` grouped by domains above.
 5. Error model
-   - Parse router JSON envelope (`success`, `message`, `cmd`) and throw typed exceptions.
+   - Parse router JSON envelope (`success`, `message`, `cmd`) and return typed `Result.Failure` values at the router boundary.
 
 Evidence for boundary separation:
 - Commands and meanings in [main.js:27](/home/kamau/MEGA/routerfx-dev/main.js:27)-[main.js:307](/home/kamau/MEGA/routerfx-dev/main.js:307).

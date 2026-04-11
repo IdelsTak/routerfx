@@ -43,11 +43,15 @@ public final class ProofCli {
         try {
             var api = apiFactory.create(baseUrl);
             var credentials = new Credentials(username, new String(password));
-            var challenge = api.fetchChallenge();
-            var session = api.login(credentials, challenge);
-            var radio = api.fetchRadioState(session);
-            printSummary(baseUrl, radio);
-            return 0;
+            var outcome = api.fetchChallenge()
+              .flatMap(challenge -> api.login(credentials, challenge))
+              .flatMap(api::fetchRadioState)
+              .fold(
+                radio -> new CliOutcome.Ok(baseUrl, radio),
+                fault -> new CliOutcome.Failed("Failed: " + text(fault))
+              );
+            outcome.report(out, err);
+            return outcome.code();
         } catch (Exception e) {
             err.println("Failed: Router operation failed");
             return 1;
@@ -56,20 +60,22 @@ public final class ProofCli {
         }
     }
 
-    private void printSummary(String baseUrl, RadioState radio) {
-        out.println("Airtel Router Radio Status");
-        out.println("Router          : " + baseUrl);
-        out.println("Operator        : " + radio.networkOperator());
-        out.println("Network Type    : " + radio.networkTypeStr());
-        out.println("RSRP            : " + radio.rsrp());
-        out.println("RSSI            : " + radio.rssi());
-        out.println("RSRQ            : " + radio.rsrq());
-        out.println("SINR            : " + radio.sinr());
-        out.println("Current Band    : " + radio.currentBand());
-        out.println("Bandwidth       : " + radio.bandwidth());
-        out.println("Downlink Flow   : " + radio.flowDl());
-        out.println("Uplink Flow     : " + radio.flowUl());
-        out.println("Online Time     : " + radio.onlineTime());
-        out.println("Online Duration : " + radio.onlineDuration());
+    private String text(RouterFault fault) {
+        return switch (fault) {
+            case RouterFault.AuthFault _ ->
+                "Authentication failed";
+            case RouterFault.SessionExpiredFault _ ->
+                "Session expired";
+            case RouterFault.TimeoutFault _ ->
+                "Router timeout";
+            case RouterFault.TransportFault _ ->
+                "Router unavailable";
+            case RouterFault.ProtocolFault _ ->
+                "Router protocol error";
+            case RouterFault.MalformedResponseFault _ ->
+                "Malformed router response";
+            case RouterFault.UnsupportedCommandFault _ ->
+                "Unsupported router command";
+        };
     }
 }

@@ -179,10 +179,16 @@ store.dispatchAsync(() -> {
 For RouterFX IO boundaries, represent expected runtime failures as `Result<T>`, not thrown transport exceptions.
 
 ```java
-switch (routerApi.login(credentials, challenge)) {
-    case Success<Session>(var session) -> dispatch(new Msg.LoginSucceeded(session));
-    case Failure<Session>(var error)   -> dispatch(new Msg.LoginFailed(error));
-}
+routerApi.login(credentials, challenge).fold(
+    session -> {
+        dispatch(new Msg.LoginSucceeded(session));
+        return 0;
+    },
+    fault -> {
+        dispatch(new Msg.LoginFailed(fault));
+        return 0;
+    }
+);
 ```
 
 This keeps failure handling explicit in effects and keeps `update()` exception-free.

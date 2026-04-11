@@ -3,6 +3,7 @@ package com.github.idelstak.routerfx.router.protocol;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.*;
+import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.io.*;
 import java.net.*;
@@ -66,93 +67,98 @@ public final class HttpRouterApi implements RouterApi {
     }
 
     @Override
-    public Challenge fetchChallenge() {
-        return responses.toChallenge(post(requests.challenge()));
+    public Result<Challenge> fetchChallenge() {
+        return post(requests.challenge()).flatMap(responses::challenge);
     }
 
     @Override
-    public Session login(Credentials credentials, Challenge challenge) {
+    public Result<Session> login(Credentials credentials, Challenge challenge) {
         Objects.requireNonNull(credentials, "credentials must not be null");
         Objects.requireNonNull(challenge, "challenge must not be null");
 
         var preLoginSessionId = generatePreLoginSessionId();
         var passwd = sha256Hex(challenge.token() + credentials.password());
 
-        return responses.toSession(post(requests.login(credentials.username(), passwd, preLoginSessionId)));
+        return post(requests.login(credentials.username(), passwd, preLoginSessionId)).flatMap(responses::session);
     }
 
     @Override
-    public RadioState fetchRadioState(Session session) {
+    public Result<RadioState> fetchRadioState(Session session) {
         Objects.requireNonNull(session, "session must not be null");
 
-        return responses.toRadioState(post(requests.radio(session.sessionId())));
+        return post(requests.radio(session.sessionId())).flatMap(responses::radio);
     }
 
-    private JsonNode post(ObjectNode requestJson) {
-        var requestText = serialize(requestJson);
+    private Result<JsonNode> post(ObjectNode requestJson) {
+        return serialize(requestJson).flatMap(this::request).flatMap(this::envelope);
+    }
+
+    private Result<HttpResponse<String>> request(String body) {
         var request = HttpRequest.newBuilder(cgiUri)
           .timeout(Duration.ofSeconds(15))
           .header("Content-Type", contentType)
           .header("X-Requested-With", requestedWith)
-          .POST(HttpRequest.BodyPublishers.ofString(requestText, StandardCharsets.UTF_8))
+          .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
           .build();
-        var response = send(request);
+        return send(request);
+    }
 
+    private Result<JsonNode> envelope(HttpResponse<String> response) {
         if (response.statusCode() != 200) {
-            throw new RouterProtocolException("Unexpected HTTP status: " + response.statusCode());
+            return new Result.Failure<>(new RouterFault.TransportFault("Unexpected HTTP status: " + response.statusCode()));
         }
-
-        var jsonText = trimToJsonObject(response.body());
-        var node = parse(jsonText);
-
-        if (!node.isObject()) {
-            throw new RouterProtocolException("Router response is not a JSON object");
-        }
-
-        if (node.has("success") && !node.path("success").asBoolean()) {
-            var message = node.path("message").asText("Router returned success=false");
-            throw new RouterProtocolException(message + " | body=" + node);
-        }
-
-        return node;
+        return trimToJsonObject(response.body()).flatMap(this::parse).flatMap(this::validate);
     }
 
-    private String serialize(ObjectNode requestJson) {
+    private Result<JsonNode> validate(JsonNode json) {
+        if (!json.isObject()) {
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Router response is not a JSON object"));
+        }
+        if (json.has("success") && !json.path("success").asBoolean()) {
+            var message = json.path("message").asText("Router returned success=false");
+            return new Result.Failure<>(faultForEnvelope(message));
+        }
+        return new Result.Success<>(json);
+    }
+
+    private Result<String> serialize(ObjectNode requestJson) {
         try {
-            return mapper.writeValueAsString(requestJson);
+            return new Result.Success<>(mapper.writeValueAsString(requestJson));
         } catch (JsonProcessingException e) {
-            throw new RouterProtocolException("Failed to serialize request JSON", e);
+            return new Result.Failure<>(new RouterFault.ProtocolFault("Failed to serialize request JSON"));
         }
     }
 
-    private HttpResponse<String> send(HttpRequest request) {
+    private Result<HttpResponse<String>> send(HttpRequest request) {
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RouterProtocolException("HTTP request failed", e);
+            return new Result.Success<>(httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)));
+        } catch (HttpTimeoutException e) {
+            return new Result.Failure<>(new RouterFault.TimeoutFault("HTTP request timed out"));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new Result.Failure<>(new RouterFault.TimeoutFault("HTTP request interrupted"));
+        } catch (IOException e) {
+            return new Result.Failure<>(new RouterFault.TransportFault("HTTP request failed"));
         }
     }
 
-    private JsonNode parse(String jsonText) {
+    private Result<JsonNode> parse(String jsonText) {
         try {
-            return mapper.readTree(jsonText);
+            return new Result.Success<>(mapper.readTree(jsonText));
         } catch (JsonProcessingException e) {
-            throw new RouterProtocolException("Failed to parse response JSON", e);
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Failed to parse response JSON"));
         }
     }
 
-    private String trimToJsonObject(String raw) {
+    private Result<String> trimToJsonObject(String raw) {
         if (raw == null) {
-            throw new RouterProtocolException("Empty response body");
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Empty response body"));
         }
         var idx = raw.indexOf('{');
         if (idx < 0) {
-            throw new RouterProtocolException("Response does not contain a JSON object");
+            return new Result.Failure<>(new RouterFault.MalformedResponseFault("Response does not contain a JSON object"));
         }
-        return raw.substring(idx).trim();
+        return new Result.Success<>(raw.substring(idx).trim());
     }
 
     private String generatePreLoginSessionId() {
@@ -184,5 +190,20 @@ public final class HttpRouterApi implements RouterApi {
         } catch (NoSuchAlgorithmException e) {
             throw new RouterProtocolException("Missing digest algorithm: " + algorithm, e);
         }
+    }
+
+    private RouterFault faultForEnvelope(String message) {
+        var detail = message == null ? "" : message;
+        var lower = detail.toLowerCase(Locale.ROOT);
+        if (lower.contains("unsupported")) {
+            return new RouterFault.UnsupportedCommandFault(detail);
+        }
+        if (lower.contains("session") || lower.contains("expire")) {
+            return new RouterFault.SessionExpiredFault(detail);
+        }
+        if (lower.contains("auth") || lower.contains("login") || lower.contains("password")) {
+            return new RouterFault.AuthFault(detail);
+        }
+        return new RouterFault.ProtocolFault(detail);
     }
 }

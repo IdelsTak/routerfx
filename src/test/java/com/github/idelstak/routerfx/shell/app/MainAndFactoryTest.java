@@ -1,6 +1,7 @@
 package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.io.*;
 import java.nio.charset.*;
@@ -16,18 +17,18 @@ final class MainAndFactoryTest {
           (username, err) -> "pw".toCharArray(),
           baseUrl -> new RouterApi() {
             @Override
-            public Challenge fetchChallenge() {
-                return new Challenge("token");
+            public Result<Challenge> fetchChallenge() {
+                return new Result.Success<>(new Challenge("token"));
             }
 
             @Override
-            public Session login(Credentials credentials, Challenge challenge) {
-                return new Session("sid");
+            public Result<Session> login(Credentials credentials, Challenge challenge) {
+                return new Result.Success<>(new Session("sid"));
             }
 
             @Override
-            public RadioState fetchRadioState(Session session) {
-                return new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600");
+            public Result<RadioState> fetchRadioState(Session session) {
+                return new Result.Success<>(new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600"));
             }
         },
           new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8),

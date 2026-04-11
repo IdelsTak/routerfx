@@ -1,6 +1,7 @@
 package com.github.idelstak.routerfx.router.protocol;
 
 import com.fasterxml.jackson.databind.*;
+import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.util.concurrent.atomic.*;
 import org.junit.jupiter.api.*;
@@ -15,7 +16,16 @@ final class HttpRouterApiTest {
           new FakeHttpResponse(200, "{\"cmd\":232,\"success\":true,\"token\":\"abc123\"}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
         var result = api.fetchChallenge();
-        assertThat("Expected token from challenge response", result.token(), is("abc123"));
+        assertThat("Expected token from challenge response", value(result).token(), is("abc123"));
+    }
+
+    @Test
+    void fetchChallengeReturnsFailureWhenRouterReturnsSuccessFalse() {
+        var client = new FakeHttpClient(request ->
+          new FakeHttpResponse(200, "{\"cmd\":232,\"success\":false,\"message\":\"NO_AUTH\"}", request));
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchChallenge();
+        assertThat("Expected auth fault when challenge is rejected", fault(result), instanceOf(RouterFault.AuthFault.class));
     }
 
     @Test
@@ -23,18 +33,17 @@ final class HttpRouterApiTest {
         var client = new FakeHttpClient(request ->
           new FakeHttpResponse(200, "{\"cmd\":100,\"success\":true,\"sessionId\":\"sess-001\"}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var session = api.login(new Credentials("admin", "pw"), new Challenge("tok"));
-        assertThat("Expected authenticated session id", session.sessionId(), is("sess-001"));
+        var result = api.login(new Credentials("admin", "pw"), new Challenge("tok"));
+        assertThat("Expected authenticated session id", value(result).sessionId(), is("sess-001"));
     }
 
     @Test
-    void loginThrowsWhenRouterReturnsLoginFailFlag() {
+    void loginReturnsFailureWhenRouterRejectsCredentials() {
         var client = new FakeHttpClient(request ->
           new FakeHttpResponse(200, "{\"cmd\":100,\"success\":true,\"login_fail\":\"fail\"}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var thrown = Assertions.assertThrows(RouterProtocolException.class, () ->
-          api.login(new Credentials("admin", "pw"), new Challenge("tok")));
-        assertThat("Expected explicit login rejection error", thrown.getMessage(), containsString("Login rejected"));
+        var result = api.login(new Credentials("admin", "pw"), new Challenge("tok"));
+        assertThat("Expected auth fault for rejected login", fault(result), instanceOf(RouterFault.AuthFault.class));
     }
 
     @Test
@@ -42,43 +51,33 @@ final class HttpRouterApiTest {
         var payload = "{\"cmd\":205,\"success\":true,\"network_operator\":\"Airtel\",\"network_type_str\":\"LTE\",\"RSRP\":\"-90\",\"RSSI\":\"-60\",\"RSRQ\":\"-11\",\"SINR\":\"20\",\"currentband\":\"B3\",\"bandwidth\":\"20M\",\"flow_dl\":\"100\",\"flow_ul\":\"20\",\"onlineTime\":\"01:00:00\",\"onlineDuration\":\"3600\"}";
         var client = new FakeHttpClient(request -> new FakeHttpResponse(200, payload, request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var radio = api.fetchRadioState(new Session("sess"));
-        assertThat("Expected operator from radio response", radio.networkOperator(), is("Airtel"));
+        var result = api.fetchRadioState(new Session("sess"));
+        assertThat("Expected operator from radio response", value(result).networkOperator(), is("Airtel"));
     }
 
     @Test
-    void fetchChallengeThrowsWhenRouterReturnsSuccessFalse() {
-        var client = new FakeHttpClient(request ->
-          new FakeHttpResponse(200, "{\"cmd\":232,\"success\":false,\"message\":\"NO_AUTH\"}", request));
+    void fetchRadioStateReturnsFailureWhenPayloadIsMalformed() {
+        var payload = "{\"cmd\":205,\"success\":true,\"network_type_str\":\"LTE\"}";
+        var client = new FakeHttpClient(request -> new FakeHttpResponse(200, payload, request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var thrown = Assertions.assertThrows(RouterProtocolException.class, api::fetchChallenge);
-        assertThat("Expected router error message in thrown exception", thrown.getMessage(), containsString("NO_AUTH"));
+        var result = api.fetchRadioState(new Session("sess"));
+        assertThat("Expected malformed-response fault when required radio fields are missing", fault(result), instanceOf(RouterFault.MalformedResponseFault.class));
     }
 
     @Test
-    void fetchChallengeThrowsWhenTokenFieldIsMissing() {
-        var client = new FakeHttpClient(request ->
-          new FakeHttpResponse(200, "{\"cmd\":232,\"success\":true}", request));
-        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var thrown = Assertions.assertThrows(RouterProtocolException.class, api::fetchChallenge);
-        assertThat("Expected missing token field error", thrown.getMessage(), containsString("Missing required field: token"));
-    }
-
-    @Test
-    void fetchChallengeThrowsWhenHttpStatusIsNotOk() {
+    void fetchChallengeReturnsFailureWhenHttpStatusIsNotOk() {
         var client = new FakeHttpClient(request -> new FakeHttpResponse(500, "{}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var thrown = Assertions.assertThrows(RouterProtocolException.class, api::fetchChallenge);
-        assertThat("Expected non-200 status error", thrown.getMessage(), containsString("Unexpected HTTP status: 500"));
+        var result = api.fetchChallenge();
+        assertThat("Expected transport fault for non-200 response", fault(result), instanceOf(RouterFault.TransportFault.class));
     }
 
     @Test
-    void fetchChallengeThrowsWhenResponseHasNoJsonObject() {
-        var client = new FakeHttpClient(request ->
-          new FakeHttpResponse(200, "plain-text-response", request));
+    void fetchChallengeReturnsFailureWhenResponseHasNoJsonObject() {
+        var client = new FakeHttpClient(request -> new FakeHttpResponse(200, "plain-text-response", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
-        var thrown = Assertions.assertThrows(RouterProtocolException.class, api::fetchChallenge);
-        assertThat("Expected no-json-object parsing error", thrown.getMessage(), containsString("does not contain a JSON object"));
+        var result = api.fetchChallenge();
+        assertThat("Expected malformed-response fault for non-json body", fault(result), instanceOf(RouterFault.MalformedResponseFault.class));
     }
 
     @Test
@@ -112,8 +111,20 @@ final class HttpRouterApiTest {
         });
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
         var challenge = api.fetchChallenge();
-        var session = api.login(new Credentials("admin", "pw"), challenge);
-        var radio = api.fetchRadioState(session);
-        assertThat("Expected core flow to return normalized network type", radio.networkTypeStr(), is("LTE"));
+        var session = challenge.flatMap(token -> api.login(new Credentials("admin", "pw"), token));
+        var radio = session.flatMap(api::fetchRadioState);
+        assertThat("Expected core flow to return normalized network type", value(radio).networkTypeStr(), is("LTE"));
+    }
+
+    private <T> T value(Result<T> result) {
+        return result.fold(value -> value, fault -> {
+            throw new AssertionError("Expected success but got fault: " + fault);
+        });
+    }
+
+    private RouterFault fault(Result<?> result) {
+        return result.fold(value -> {
+            throw new AssertionError("Expected fault but got success value");
+        }, item -> item);
     }
 }
