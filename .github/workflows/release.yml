@@ -1,20 +1,35 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   release:
-    name: Build and Publish Release Artifact
+    name: Bump Version and Publish Release Artifact
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.actor.login != 'github-actions[bot]' &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip release]')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Set up JDK 26
         uses: actions/setup-java@v4
@@ -23,6 +38,71 @@ jobs:
           java-version: '26'
           cache: maven
 
+      - name: Resolve semver bump type from PR labels
+        id: bump-type
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          API="https://api.github.com/repos/${REPO}/commits/${SHA}/pulls"
+          PRS_JSON="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")"
+          LABELS="$(echo "$PRS_JSON" | jq -r '.[0].labels[]?.name' || true)"
+          BUMP="patch"
+          if echo "$LABELS" | grep -qx 'version:major'; then
+            BUMP="major"
+          elif echo "$LABELS" | grep -qx 'version:minor'; then
+            BUMP="minor"
+          elif echo "$LABELS" | grep -qx 'version:patch'; then
+            BUMP="patch"
+          fi
+          echo "type=$BUMP" >> "$GITHUB_OUTPUT"
+
+      - name: Bump pom.xml version and create release tag
+        id: bump
+        env:
+          BUMP_TYPE: ${{ steps.bump-type.outputs.type }}
+        run: |
+          set -euo pipefail
+          CURRENT="$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)"
+          BASE="${CURRENT%-SNAPSHOT}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
+          if [[ -z "$MAJOR" || -z "$MINOR" || -z "$PATCH" ]]; then
+            echo "Unsupported semver format: $BASE"
+            exit 1
+          fi
+          case "$BUMP_TYPE" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch|*)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          NEXT="${MAJOR}.${MINOR}.${PATCH}"
+          mvn -B -ntp versions:set -DnewVersion="$NEXT" -DgenerateBackupPoms=false
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pom.xml
+          if git diff --cached --quiet; then
+            echo "No version bump changes detected"
+            echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+            echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Bump routerfx version to $NEXT [skip release]"
+          git tag "v$NEXT"
+          git push origin HEAD:main --follow-tags
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
+
       - name: Build with tests
         run: mvn -B -ntp -Punit-tests verify
 
@@ -30,12 +110,12 @@ jobs:
         run: mvn -B -ntp -DskipTests package
 
       - name: Create checksums
-        run: |
-          sha256sum target/*.jar > target/sha256sums.txt
+        run: sha256sum target/*.jar > target/sha256sums.txt
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.bump.outputs.tag }}
           files: |
             target/*.jar
             target/sha256sums.txt
