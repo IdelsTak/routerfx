@@ -1,6 +1,6 @@
 # RouterFX
 
-![JaCoCo Coverage](.github/badges/jacoco.svg)
+**JaCoCo Test Coverage**: ![JaCoCo Coverage](.github/badges/jacoco.svg) ![JaCoCo Branch Coverage](.github/badges/jacoco-branches.svg) 
 
 RouterFX is a native Java desktop application for interacting directly with LTE/5G router firmware through its internal command interface.
 

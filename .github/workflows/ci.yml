@@ -93,16 +93,11 @@ jobs:
           if-no-files-found: ignore
 
       - name: Generate JaCoCo badge
-        id: jacoco
-        uses: cicirello/jacoco-badge-generator@v2
-        with:
-          jacoco-csv-file: target/site/jacoco/jacoco.csv
-          badges-directory: .github/badges
-          generate-branches-badge: false
+        run: ./scripts/update-coverage-badge.sh
 
       - name: Commit updated badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Update JaCoCo coverage badge
-          file_pattern: .github/badges/jacoco.svg
+          file_pattern: .github/badges/*.svg
