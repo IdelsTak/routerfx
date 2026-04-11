@@ -13,10 +13,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class HttpRouterApi implements RouterApi {
-    private static final String CGI_PATH = "/cgi-bin/http.cgi";
-    private static final String CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
-    private static final String X_REQUESTED_WITH = "XMLHttpRequest";
-
+    private final String cgiPath;
+    private final String contentType;
+    private final String requestedWith;
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
     private final URI cgiUri;
@@ -30,15 +29,30 @@ public final class HttpRouterApi implements RouterApi {
         Objects.requireNonNull(baseUrl, "baseUrl must not be null");
         Objects.requireNonNull(language, "language must not be null");
 
-        CookieManager cookieManager = new CookieManager();
+        var cookieManager = new CookieManager();
         cookieManager.setCookiePolicy(enableCookies ? CookiePolicy.ACCEPT_ALL : CookiePolicy.ACCEPT_NONE);
 
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .cookieHandler(cookieManager)
                 .build();
+        this.cgiPath = "/cgi-bin/http.cgi";
+        this.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+        this.requestedWith = "XMLHttpRequest";
         this.mapper = new ObjectMapper();
-        this.cgiUri = URI.create(baseUrl).resolve(CGI_PATH);
+        this.cgiUri = URI.create(baseUrl).resolve(this.cgiPath);
+        this.language = language;
+    }
+
+    HttpRouterApi(String baseUrl, String language, HttpClient httpClient, ObjectMapper mapper) {
+        Objects.requireNonNull(baseUrl, "baseUrl must not be null");
+        Objects.requireNonNull(language, "language must not be null");
+        this.httpClient = Objects.requireNonNull(httpClient, "httpClient must not be null");
+        this.cgiPath = "/cgi-bin/http.cgi";
+        this.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+        this.requestedWith = "XMLHttpRequest";
+        this.mapper = Objects.requireNonNull(mapper, "mapper must not be null");
+        this.cgiUri = URI.create(baseUrl).resolve(this.cgiPath);
         this.language = language;
     }
 
@@ -50,8 +64,8 @@ public final class HttpRouterApi implements RouterApi {
         req.put("sessionId", "");
         req.put("language", language);
 
-        JsonNode res = post(req);
-        String token = requiredText(res, "token");
+        var res = post(req);
+        var token = requiredText(res, "token");
         return new Challenge(token);
     }
 
@@ -60,8 +74,8 @@ public final class HttpRouterApi implements RouterApi {
         Objects.requireNonNull(credentials, "credentials must not be null");
         Objects.requireNonNull(challenge, "challenge must not be null");
 
-        String preLoginSessionId = generatePreLoginSessionId();
-        String passwd = sha256Hex(challenge.token() + credentials.password());
+        var preLoginSessionId = generatePreLoginSessionId();
+        var passwd = sha256Hex(challenge.token() + credentials.password());
 
         ObjectNode req = mapper.createObjectNode();
         req.put("cmd", 100);
@@ -72,12 +86,12 @@ public final class HttpRouterApi implements RouterApi {
         req.put("isAutoUpgrade", "0");
         req.put("language", language);
 
-        JsonNode res = post(req);
+        var res = post(req);
         if ("fail".equals(res.path("login_fail").asText()) || "fail".equals(res.path("login_fail2").asText())) {
             throw new RouterProtocolException("Login rejected: " + res.toString());
         }
 
-        String authSessionId = requiredText(res, "sessionId");
+        var authSessionId = requiredText(res, "sessionId");
         return new Session(authSessionId);
     }
 
@@ -91,7 +105,7 @@ public final class HttpRouterApi implements RouterApi {
         req.put("language", language);
         req.put("sessionId", session.sessionId());
 
-        JsonNode res = post(req);
+        var res = post(req);
         return new RadioState(
                 requiredText(res, "network_operator"),
                 requiredText(res, "network_type_str"),
@@ -109,99 +123,106 @@ public final class HttpRouterApi implements RouterApi {
     }
 
     private JsonNode post(ObjectNode requestJson) {
-        String requestText;
-        try {
-            requestText = mapper.writeValueAsString(requestJson);
-        } catch (JsonProcessingException e) {
-            throw new RouterProtocolException("Failed to serialize request JSON", e);
-        }
-
-        HttpRequest request = HttpRequest.newBuilder(cgiUri)
+        var requestText = serialize(requestJson);
+        var request = HttpRequest.newBuilder(cgiUri)
                 .timeout(Duration.ofSeconds(15))
-                .header("Content-Type", CONTENT_TYPE)
-                .header("X-Requested-With", X_REQUESTED_WITH)
+                .header("Content-Type", contentType)
+                .header("X-Requested-With", requestedWith)
                 .POST(HttpRequest.BodyPublishers.ofString(requestText, StandardCharsets.UTF_8))
                 .build();
-
-        HttpResponse<String> response;
-        try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RouterProtocolException("HTTP request failed", e);
-        }
+        var response = send(request);
 
         if (response.statusCode() != 200) {
             throw new RouterProtocolException("Unexpected HTTP status: " + response.statusCode());
         }
 
-        String jsonText = trimToJsonObject(response.body());
-        JsonNode node;
-        try {
-            node = mapper.readTree(jsonText);
-        } catch (JsonProcessingException e) {
-            throw new RouterProtocolException("Failed to parse response JSON", e);
-        }
+        var jsonText = trimToJsonObject(response.body());
+        var node = parse(jsonText);
 
         if (!node.isObject()) {
             throw new RouterProtocolException("Router response is not a JSON object");
         }
 
         if (node.has("success") && !node.path("success").asBoolean()) {
-            String message = node.path("message").asText("Router returned success=false");
+            var message = node.path("message").asText("Router returned success=false");
             throw new RouterProtocolException(message + " | body=" + node);
         }
 
         return node;
     }
 
-    private static String trimToJsonObject(String raw) {
+    private String serialize(ObjectNode requestJson) {
+        try {
+            return mapper.writeValueAsString(requestJson);
+        } catch (JsonProcessingException e) {
+            throw new RouterProtocolException("Failed to serialize request JSON", e);
+        }
+    }
+
+    private HttpResponse<String> send(HttpRequest request) {
+        try {
+            return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new RouterProtocolException("HTTP request failed", e);
+        }
+    }
+
+    private JsonNode parse(String jsonText) {
+        try {
+            return mapper.readTree(jsonText);
+        } catch (JsonProcessingException e) {
+            throw new RouterProtocolException("Failed to parse response JSON", e);
+        }
+    }
+
+    private String trimToJsonObject(String raw) {
         if (raw == null) {
             throw new RouterProtocolException("Empty response body");
         }
-        int idx = raw.indexOf('{');
+        var idx = raw.indexOf('{');
         if (idx < 0) {
             throw new RouterProtocolException("Response does not contain a JSON object");
         }
         return raw.substring(idx).trim();
     }
 
-    private static String requiredText(JsonNode node, String fieldName) {
-        JsonNode v = node.get(fieldName);
+    private String requiredText(JsonNode node, String fieldName) {
+        var v = node.get(fieldName);
         if (v == null || v.isNull()) {
             throw new RouterProtocolException("Missing required field: " + fieldName + " in " + node);
         }
-        String text = v.asText();
+        var text = v.asText();
         if (text == null || text.isBlank()) {
             throw new RouterProtocolException("Blank required field: " + fieldName + " in " + node);
         }
         return text;
     }
 
-    private static String generatePreLoginSessionId() {
+    private String generatePreLoginSessionId() {
         return md5Hex(randomStringLikeJs()) + md5Hex(randomStringLikeJs());
     }
 
-    private static String randomStringLikeJs() {
+    private String randomStringLikeJs() {
         return Double.toString(ThreadLocalRandom.current().nextDouble());
     }
 
-    private static String sha256Hex(String input) {
+    private String sha256Hex(String input) {
         return digestHex("SHA-256", input);
     }
 
-    private static String md5Hex(String input) {
+    private String md5Hex(String input) {
         return digestHex("MD5", input);
     }
 
-    private static String digestHex(String algorithm, String input) {
+    private String digestHex(String algorithm, String input) {
         try {
-            MessageDigest md = MessageDigest.getInstance(algorithm);
-            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
+            var md = MessageDigest.getInstance(algorithm);
+            var digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            var sb = new StringBuilder(digest.length * 2);
+            for (var b : digest) {
                 sb.append(Character.forDigit((b >>> 4) & 0xF, 16));
                 sb.append(Character.forDigit(b & 0xF, 16));
             }
@@ -210,4 +231,5 @@ public final class HttpRouterApi implements RouterApi {
             throw new RouterProtocolException("Missing digest algorithm: " + algorithm, e);
         }
     }
+
 }
