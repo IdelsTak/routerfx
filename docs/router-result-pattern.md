@@ -120,9 +120,16 @@ For MVU effects, test:
 4. Keep constructor/value-object validation as exceptions.
 5. Add targeted unit tests for each `Failure` variant.
 
+## Current Status
+
+As of the current implementation state:
+
+- package split toward vertical slices is in place (`shell.app`, `router.protocol`, `shared.value`, feature boundary packages)
+- login/dashboard protocol command handling (`cmd:232`, `cmd:100`, `cmd:205`) is centralized at the protocol edge
+- typed `Result<T>` boundary return contracts are documented and planned, but not yet fully implemented in boundary interfaces
+
 ## Non-Goals
 
 - replacing exceptions in all layers
 - wrapping pure computation methods in `Result`
 - introducing third-party reactive libraries
-

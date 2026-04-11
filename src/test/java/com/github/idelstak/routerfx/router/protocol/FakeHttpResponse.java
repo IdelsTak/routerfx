@@ -1,4 +1,4 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.router.protocol;
 
 import java.net.*;
 import java.net.http.*;
@@ -6,6 +6,7 @@ import java.util.*;
 import javax.net.ssl.*;
 
 final class FakeHttpResponse implements HttpResponse<String> {
+
     private final int status;
     private final String payload;
     private final HttpRequest request;

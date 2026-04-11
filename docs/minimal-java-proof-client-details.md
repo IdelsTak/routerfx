@@ -1,6 +1,7 @@
 # Minimal Java Proof Client Details (HAR + JS Only)
 
 Implementation context: [RouterFX JavaFX App Unified Architecture](./javafx-unified-architecture.md)
+Implementation note: code packages are now split by capability (`shell.app`, `router.protocol`, `shared.value`, plus feature slices), while this document remains protocol evidence for minimal login and dashboard-read behavior.
 
 ## 1. Minimal login contract
 

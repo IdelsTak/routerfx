@@ -116,7 +116,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.6.3</version>
         <configuration>
-          <mainClass>com.github.idelstak.routerfx.proof.Main</mainClass>
+          <mainClass>com.github.idelstak.routerfx.shell.app.Main</mainClass>
         </configuration>
       </plugin>
     </plugins>

@@ -163,6 +163,14 @@ Use capability-oriented packages, not technical-layer buckets.
 
 Avoid package names such as `util`, `manager`, `service`, `model`, or `dao`.
 
+Current implementation status:
+
+- `com.github.idelstak.routerfx.shell.app` is implemented for app/CLI bootstrap flow.
+- `com.github.idelstak.routerfx.router.protocol` is implemented for HTTP/protocol edge adapters.
+- `com.github.idelstak.routerfx.shared.value` is implemented for immutable shared value records.
+- `com.github.idelstak.routerfx.auth.login` currently hosts login boundary contracts and is ready for full MVU login slice expansion.
+- `com.github.idelstak.routerfx.dashboard.network` currently hosts dashboard boundary contracts and is ready for full MVU dashboard slice expansion.
+
 ## Coding Guideline Alignment
 
 To keep MVU aligned with Yegor-style constraints, implement with these adaptations:

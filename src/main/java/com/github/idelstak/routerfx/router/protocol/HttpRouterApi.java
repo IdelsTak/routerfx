@@ -1,8 +1,9 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.router.protocol;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.*;
+import com.github.idelstak.routerfx.shared.value.*;
 import java.io.*;
 import java.net.*;
 import java.net.http.*;
@@ -13,6 +14,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class HttpRouterApi implements RouterApi {
+
     private final String cgiPath;
     private final String contentType;
     private final String requestedWith;
@@ -20,6 +22,8 @@ public final class HttpRouterApi implements RouterApi {
     private final ObjectMapper mapper;
     private final URI cgiUri;
     private final String language;
+    private final RouterProtocolRequests requests;
+    private final RouterProtocolResponses responses;
 
     public HttpRouterApi(String baseUrl) {
         this(baseUrl, "en", false);
@@ -30,18 +34,21 @@ public final class HttpRouterApi implements RouterApi {
         Objects.requireNonNull(language, "language must not be null");
 
         var cookieManager = new CookieManager();
-        cookieManager.setCookiePolicy(enableCookies ? CookiePolicy.ACCEPT_ALL : CookiePolicy.ACCEPT_NONE);
+        cookieManager.setCookiePolicy(enableCookies ? CookiePolicy.ACCEPT_ALL
+                                        : CookiePolicy.ACCEPT_NONE);
 
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .cookieHandler(cookieManager)
-                .build();
+          .connectTimeout(Duration.ofSeconds(5))
+          .cookieHandler(cookieManager)
+          .build();
         this.cgiPath = "/cgi-bin/http.cgi";
         this.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
         this.requestedWith = "XMLHttpRequest";
         this.mapper = new ObjectMapper();
         this.cgiUri = URI.create(baseUrl).resolve(this.cgiPath);
         this.language = language;
+        this.requests = new RouterProtocolRequests(this.mapper, this.language);
+        this.responses = new RouterProtocolResponses();
     }
 
     HttpRouterApi(String baseUrl, String language, HttpClient httpClient, ObjectMapper mapper) {
@@ -54,19 +61,13 @@ public final class HttpRouterApi implements RouterApi {
         this.mapper = Objects.requireNonNull(mapper, "mapper must not be null");
         this.cgiUri = URI.create(baseUrl).resolve(this.cgiPath);
         this.language = language;
+        this.requests = new RouterProtocolRequests(this.mapper, this.language);
+        this.responses = new RouterProtocolResponses();
     }
 
     @Override
     public Challenge fetchChallenge() {
-        ObjectNode req = mapper.createObjectNode();
-        req.put("cmd", 232);
-        req.put("method", "GET");
-        req.put("sessionId", "");
-        req.put("language", language);
-
-        var res = post(req);
-        var token = requiredText(res, "token");
-        return new Challenge(token);
+        return responses.toChallenge(post(requests.challenge()));
     }
 
     @Override
@@ -77,59 +78,24 @@ public final class HttpRouterApi implements RouterApi {
         var preLoginSessionId = generatePreLoginSessionId();
         var passwd = sha256Hex(challenge.token() + credentials.password());
 
-        ObjectNode req = mapper.createObjectNode();
-        req.put("cmd", 100);
-        req.put("method", "POST");
-        req.put("sessionId", preLoginSessionId);
-        req.put("username", credentials.username());
-        req.put("passwd", passwd);
-        req.put("isAutoUpgrade", "0");
-        req.put("language", language);
-
-        var res = post(req);
-        if ("fail".equals(res.path("login_fail").asText()) || "fail".equals(res.path("login_fail2").asText())) {
-            throw new RouterProtocolException("Login rejected: " + res.toString());
-        }
-
-        var authSessionId = requiredText(res, "sessionId");
-        return new Session(authSessionId);
+        return responses.toSession(post(requests.login(credentials.username(), passwd, preLoginSessionId)));
     }
 
     @Override
     public RadioState fetchRadioState(Session session) {
         Objects.requireNonNull(session, "session must not be null");
 
-        ObjectNode req = mapper.createObjectNode();
-        req.put("cmd", 205);
-        req.put("method", "GET");
-        req.put("language", language);
-        req.put("sessionId", session.sessionId());
-
-        var res = post(req);
-        return new RadioState(
-                requiredText(res, "network_operator"),
-                requiredText(res, "network_type_str"),
-                requiredText(res, "RSRP"),
-                requiredText(res, "RSSI"),
-                requiredText(res, "RSRQ"),
-                requiredText(res, "SINR"),
-                requiredText(res, "currentband"),
-                requiredText(res, "bandwidth"),
-                requiredText(res, "flow_dl"),
-                requiredText(res, "flow_ul"),
-                requiredText(res, "onlineTime"),
-                requiredText(res, "onlineDuration")
-        );
+        return responses.toRadioState(post(requests.radio(session.sessionId())));
     }
 
     private JsonNode post(ObjectNode requestJson) {
         var requestText = serialize(requestJson);
         var request = HttpRequest.newBuilder(cgiUri)
-                .timeout(Duration.ofSeconds(15))
-                .header("Content-Type", contentType)
-                .header("X-Requested-With", requestedWith)
-                .POST(HttpRequest.BodyPublishers.ofString(requestText, StandardCharsets.UTF_8))
-                .build();
+          .timeout(Duration.ofSeconds(15))
+          .header("Content-Type", contentType)
+          .header("X-Requested-With", requestedWith)
+          .POST(HttpRequest.BodyPublishers.ofString(requestText, StandardCharsets.UTF_8))
+          .build();
         var response = send(request);
 
         if (response.statusCode() != 200) {
@@ -189,18 +155,6 @@ public final class HttpRouterApi implements RouterApi {
         return raw.substring(idx).trim();
     }
 
-    private String requiredText(JsonNode node, String fieldName) {
-        var v = node.get(fieldName);
-        if (v == null || v.isNull()) {
-            throw new RouterProtocolException("Missing required field: " + fieldName + " in " + node);
-        }
-        var text = v.asText();
-        if (text == null || text.isBlank()) {
-            throw new RouterProtocolException("Blank required field: " + fieldName + " in " + node);
-        }
-        return text;
-    }
-
     private String generatePreLoginSessionId() {
         return md5Hex(randomStringLikeJs()) + md5Hex(randomStringLikeJs());
     }
@@ -231,5 +185,4 @@ public final class HttpRouterApi implements RouterApi {
             throw new RouterProtocolException("Missing digest algorithm: " + algorithm, e);
         }
     }
-
 }

@@ -1,18 +1,19 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.router.protocol;
 
 import java.net.*;
 import java.net.http.*;
 import java.security.*;
-import java.security.cert.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 import javax.net.ssl.*;
 
 final class FakeHttpClient extends HttpClient {
-    private final java.util.function.Function<HttpRequest, HttpResponse<String>> responder;
 
-    FakeHttpClient(java.util.function.Function<HttpRequest, HttpResponse<String>> responder) {
+    private final Function<HttpRequest, HttpResponse<String>> responder;
+
+    FakeHttpClient(Function<HttpRequest, HttpResponse<String>> responder) {
         this.responder = Objects.requireNonNull(responder, "responder must not be null");
     }
 
@@ -79,9 +80,9 @@ final class FakeHttpClient extends HttpClient {
 
     @Override
     public <T> CompletableFuture<HttpResponse<T>> sendAsync(
-            HttpRequest request,
-            HttpResponse.BodyHandler<T> responseBodyHandler,
-            HttpResponse.PushPromiseHandler<T> pushPromiseHandler
+      HttpRequest request,
+      HttpResponse.BodyHandler<T> responseBodyHandler,
+      HttpResponse.PushPromiseHandler<T> pushPromiseHandler
     ) {
         return CompletableFuture.completedFuture(this.send(request, responseBodyHandler));
     }
