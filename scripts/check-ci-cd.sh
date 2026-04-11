@@ -31,4 +31,8 @@ echo "Running Maven verification for CI pipeline"
 "${MVN_BASE[@]}" -Punit-tests verify
 
 echo "Running Maven UI test profile command"
-xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' "${MVN_BASE[@]}" -Pui-tests test
+if rg -n '@Tag\("ui"\)' src/test >/dev/null 2>&1; then
+  xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' "${MVN_BASE[@]}" -Pui-tests test
+else
+  echo "No UI-tagged tests found, skipping xvfb-run UI step"
+fi
