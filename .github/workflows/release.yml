@@ -67,6 +67,9 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Run verification with JaCoCo
+        run: mvn -B -ntp -Punit-tests verify
+
       - name: Generate JaCoCo badges
         run: ./scripts/update-coverage-badge.sh
 
