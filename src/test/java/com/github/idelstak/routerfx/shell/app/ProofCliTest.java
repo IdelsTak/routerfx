@@ -1,6 +1,7 @@
 package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.io.*;
 import java.nio.charset.*;
@@ -19,17 +20,17 @@ final class ProofCliTest {
           (username, err) -> "ignored".toCharArray(),
           baseUrl -> new RouterApi() {
             @Override
-            public Challenge fetchChallenge() {
+            public Result<Challenge> fetchChallenge() {
                 throw new AssertionError("Expected fetchChallenge not to run for invalid args");
             }
 
             @Override
-            public Session login(Credentials credentials, Challenge challenge) {
+            public Result<Session> login(Credentials credentials, Challenge challenge) {
                 throw new AssertionError("Expected login not to run for invalid args");
             }
 
             @Override
-            public RadioState fetchRadioState(Session session) {
+            public Result<RadioState> fetchRadioState(Session session) {
                 throw new AssertionError("Expected fetchRadioState not to run for invalid args");
             }
         },
@@ -51,17 +52,17 @@ final class ProofCliTest {
             created.set(true);
             return new RouterApi() {
                 @Override
-                public Challenge fetchChallenge() {
+                public Result<Challenge> fetchChallenge() {
                     throw new AssertionError("Expected no API calls for invalid args");
                 }
 
                 @Override
-                public Session login(Credentials credentials, Challenge challenge) {
+                public Result<Session> login(Credentials credentials, Challenge challenge) {
                     throw new AssertionError("Expected no API calls for invalid args");
                 }
 
                 @Override
-                public RadioState fetchRadioState(Session session) {
+                public Result<RadioState> fetchRadioState(Session session) {
                     throw new AssertionError("Expected no API calls for invalid args");
                 }
             };
@@ -82,19 +83,19 @@ final class ProofCliTest {
           (username, err) -> "s3cr3t".toCharArray(),
           baseUrl -> new RouterApi() {
             @Override
-            public Challenge fetchChallenge() {
-                return new Challenge("token");
+            public Result<Challenge> fetchChallenge() {
+                return new Result.Success<>(new Challenge("token"));
             }
 
             @Override
-            public Session login(Credentials credentials, Challenge challenge) {
+            public Result<Session> login(Credentials credentials, Challenge challenge) {
                 seenPassword.set(credentials.password());
-                return new Session("session");
+                return new Result.Success<>(new Session("session"));
             }
 
             @Override
-            public RadioState fetchRadioState(Session session) {
-                return new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600");
+            public Result<RadioState> fetchRadioState(Session session) {
+                return new Result.Success<>(new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600"));
             }
         },
           new PrintStream(outBytes, true, StandardCharsets.UTF_8),
@@ -113,18 +114,18 @@ final class ProofCliTest {
           (username, err) -> provided,
           baseUrl -> new RouterApi() {
             @Override
-            public Challenge fetchChallenge() {
-                return new Challenge("token");
+            public Result<Challenge> fetchChallenge() {
+                return new Result.Success<>(new Challenge("token"));
             }
 
             @Override
-            public Session login(Credentials credentials, Challenge challenge) {
-                return new Session("session");
+            public Result<Session> login(Credentials credentials, Challenge challenge) {
+                return new Result.Success<>(new Session("session"));
             }
 
             @Override
-            public RadioState fetchRadioState(Session session) {
-                return new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600");
+            public Result<RadioState> fetchRadioState(Session session) {
+                return new Result.Success<>(new RadioState("Airtel", "LTE", "-91", "-61", "-10", "21", "B3", "20M", "123", "45", "00:10:00", "600"));
             }
         },
           new PrintStream(outBytes, true, StandardCharsets.UTF_8),
@@ -149,17 +150,17 @@ final class ProofCliTest {
           (username, err) -> secret.toCharArray(),
           baseUrl -> new RouterApi() {
             @Override
-            public Challenge fetchChallenge() {
-                return new Challenge("token");
+            public Result<Challenge> fetchChallenge() {
+                return new Result.Success<>(new Challenge("token"));
             }
 
             @Override
-            public Session login(Credentials credentials, Challenge challenge) {
-                throw new RouterProtocolException("Login failed for password " + credentials.password());
+            public Result<Session> login(Credentials credentials, Challenge challenge) {
+                return new Result.Failure<>(new RouterFault.AuthFault("Login failed for password " + credentials.password()));
             }
 
             @Override
-            public RadioState fetchRadioState(Session session) {
+            public Result<RadioState> fetchRadioState(Session session) {
                 throw new AssertionError("Expected no radio fetch after login failure");
             }
         },
