@@ -1,11 +1,11 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows:
-      - CI
+  pull_request:
+    branches:
+      - main
     types:
-      - completed
+      - closed
 
 permissions:
   contents: write
@@ -14,7 +14,7 @@ permissions:
 jobs:
   release:
     name: Build and Publish Release Artifact
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump.outputs.version }}
@@ -33,38 +33,18 @@ jobs:
           java-version: '26'
           cache: maven
 
-      - name: Resolve PR merge context
-        id: pr-context
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
-          API="https://api.github.com/repos/${REPO}/commits/${SHA}/pulls"
-          PRS_JSON="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")"
-          MERGED_AT="$(echo "$PRS_JSON" | jq -r '.[0].merged_at // empty')"
-          if [[ -z "$MERGED_AT" ]]; then
-            echo "merged=false" >> "$GITHUB_OUTPUT"
-            echo "No merged PR found for $SHA, skipping release steps"
-            exit 0
-          fi
-          echo "merged=true" >> "$GITHUB_OUTPUT"
-
       - name: Resolve semver bump type from PR labels
         id: bump-type
-        if: steps.pr-context.outputs.merged == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS_JSON: ${{ toJson(github.event.pull_request.labels) }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           set -euo pipefail
-          API="https://api.github.com/repos/${REPO}/commits/${SHA}/pulls"
-          PRS_JSON="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")"
-          TITLE="$(echo "$PRS_JSON" | jq -r '.[0].title // empty')"
-          BODY="$(echo "$PRS_JSON" | jq -r '.[0].body // empty')"
-          LABELS="$(echo "$PRS_JSON" | jq -r '.[0].labels[]?.name' || true)"
+          TITLE="$PR_TITLE"
+          BODY="$PR_BODY"
+          LABELS="$(echo "$PR_LABELS_JSON" | jq -r '.[].name' || true)"
           BUMP="patch"
           if echo "$LABELS" | grep -qw 'version:major'; then
             BUMP="major"
@@ -74,10 +54,10 @@ jobs:
             BUMP="patch"
           fi
           if [[ -z "$TITLE" ]]; then
-            TITLE="${{ github.event.workflow_run.head_commit.message }}"
+            TITLE="Release ${MERGE_SHA}"
           fi
           if [[ -z "$BODY" ]]; then
-            BODY="Release created from commit $SHA"
+            BODY="Release created from merged PR"
           fi
           echo "type=$BUMP" >> "$GITHUB_OUTPUT"
           echo "title=$TITLE" >> "$GITHUB_OUTPUT"
@@ -89,7 +69,6 @@ jobs:
 
       - name: Bump pom.xml version and create release tag
         id: bump
-        if: steps.pr-context.outputs.merged == 'true'
         env:
           BUMP_TYPE: ${{ steps.bump-type.outputs.type }}
         run: |
@@ -133,15 +112,12 @@ jobs:
           echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
 
       - name: Package application
-        if: steps.pr-context.outputs.merged == 'true'
         run: mvn -B -ntp -DskipTests package
 
       - name: Create checksums
-        if: steps.pr-context.outputs.merged == 'true'
         run: sha256sum target/*.jar > target/sha256sums.txt
 
       - name: Generate changelog file
-        if: steps.pr-context.outputs.merged == 'true'
         run: |
           echo "# Changelog" > changelog.md
           echo "" >> changelog.md
@@ -150,7 +126,6 @@ jobs:
           echo "${{ steps.bump-type.outputs.body }}" >> changelog.md
 
       - name: Publish GitHub release
-        if: steps.pr-context.outputs.merged == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.bump.outputs.tag }}
