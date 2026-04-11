@@ -4,6 +4,7 @@
 **Subject:** Architecture Guide — MVU with Java 26 + JavaFX (no third-party reactive libraries)
 
 Primary implementation reference: [RouterFX JavaFX App Unified Architecture](./javafx-unified-architecture.md)
+Boundary outcome contract reference: [RouterFX Result Pattern at Boundaries](./router-result-pattern.md)
 
 ## Overview
 
@@ -172,6 +173,19 @@ store.dispatchAsync(() -> {
     }
 });
 ```
+
+## Boundary Outcomes with Result
+
+For RouterFX IO boundaries, represent expected runtime failures as `Result<T>`, not thrown transport exceptions.
+
+```java
+switch (routerApi.login(credentials, challenge)) {
+    case Success<Session>(var session) -> dispatch(new Msg.LoginSucceeded(session));
+    case Failure<Session>(var error)   -> dispatch(new Msg.LoginFailed(error));
+}
+```
+
+This keeps failure handling explicit in effects and keeps `update()` exception-free.
 
 ## Wiring It All Together
 

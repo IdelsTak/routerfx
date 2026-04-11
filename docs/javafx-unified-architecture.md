@@ -6,6 +6,7 @@ This document defines one implementation architecture for the proposed JavaFX ap
 It combines:
 
 - the MVU design in `mvu-architecture.md`
+- boundary outcome design in `router-result-pattern.md`
 - protocol constraints from the router analysis docs
 - coding constraints from `agent-docs/coding-guidelines/yegor-best-practices.md`
 
@@ -43,6 +44,7 @@ The implementation must follow these non-negotiable rules:
 - Exhaustive events: messages use sealed interfaces and record variants.
 - Pure update: state transitions contain no IO, no JavaFX UI calls, no thread calls.
 - Side effects at edges only: effect handlers call router APIs and dispatch result messages.
+- Boundary contracts use `Result<T>` for expected runtime failures.
 - No anemic global helpers: avoid utility classes and static business methods.
 - Narrow contracts: behavior exposed through interfaces, implemented by final classes.
 - Constructor validity: objects reject invalid state at construction boundaries.
@@ -172,7 +174,8 @@ To keep MVU aligned with Yegor-style constraints, implement with these adaptatio
 - Prefer records for immutable state and value objects.
 - Avoid getters as data leaks in domain behavior objects; state records remain the explicit MVU snapshot contract.
 - Keep side effects in adapters/decorators at the boundary.
-- Fail fast at boundaries with contextual exceptions.
+- Keep constructor/value invariants fail-fast with contextual exceptions.
+- Return typed `Result` failures for expected runtime boundary outcomes.
 
 Where a guideline and JavaFX framework mechanics conflict, framework constraints apply at the boundary only, and domain/update objects stay guideline-compliant.
 
@@ -188,9 +191,10 @@ For multi-call workflows, use structured concurrency and convert completion/fail
 ## Error and Recovery Strategy
 
 - Parse protocol envelope at adapter boundary.
-- Convert failures to typed domain failures.
+- Convert boundary outcomes to `Result<T>` with typed `RouterError` variants.
+- Do not leak transport exceptions across boundary interfaces.
 - Dispatch failure messages (`LoginFailed`, `DashboardLoadFailed`) and render user-facing state.
-- Never swallow exceptions; enrich with command and context.
+- Never swallow invariant exceptions; enrich and fail fast where object validity is broken.
 
 ## Test Strategy
 
@@ -226,4 +230,4 @@ A change is architecture-compliant when all are true:
 - view code has no business decisions
 - package names follow capability slices
 - behavior contracts are interface-first and implemented by final classes
-
+- router boundary methods return `Result<T>` for expected runtime failures
