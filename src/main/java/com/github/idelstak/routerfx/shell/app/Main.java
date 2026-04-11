@@ -1,4 +1,6 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.shell.app;
+
+import com.github.idelstak.routerfx.router.protocol.*;
 
 public final class Main {
 

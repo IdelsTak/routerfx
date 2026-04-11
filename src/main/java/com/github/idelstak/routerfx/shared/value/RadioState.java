@@ -1,4 +1,4 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.shared.value;
 
 public record RadioState(
   String networkOperator,

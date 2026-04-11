@@ -1,13 +1,14 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.shell.app;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
+import com.github.idelstak.routerfx.router.protocol.*;
 import java.io.*;
 import java.nio.charset.*;
 import org.junit.jupiter.api.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 final class ConsolePasswordInputTest {
+
     @Test
     void readsPasswordFromStandardInputFallback() {
         var input = new ByteArrayInputStream("s3cr3t\n".getBytes(StandardCharsets.UTF_8));
@@ -37,8 +38,8 @@ final class ConsolePasswordInputTest {
         var errBytes = new ByteArrayOutputStream();
         var reader = new ConsolePasswordInput(input);
         var thrown = Assertions.assertThrows(
-                RouterProtocolException.class,
-                () -> reader.read("admin", new PrintStream(errBytes, true, StandardCharsets.UTF_8))
+          RouterProtocolException.class,
+          () -> reader.read("admin", new PrintStream(errBytes, true, StandardCharsets.UTF_8))
         );
         assertThat("Expected read failure context in exception", thrown.getMessage(), containsString("Failed to read password"));
     }

@@ -1,4 +1,4 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.router.protocol;
 
 public final class DefaultRouterApiFactory implements RouterApiFactory {
 

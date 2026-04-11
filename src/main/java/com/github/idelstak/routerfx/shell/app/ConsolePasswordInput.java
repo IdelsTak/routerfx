@@ -1,5 +1,6 @@
-package com.github.idelstak.routerfx.proof;
+package com.github.idelstak.routerfx.shell.app;
 
+import com.github.idelstak.routerfx.router.protocol.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
