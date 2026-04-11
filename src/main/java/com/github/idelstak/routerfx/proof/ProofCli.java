@@ -47,7 +47,7 @@ public final class ProofCli {
             printSummary(baseUrl, radio);
             return 0;
         } catch (Exception e) {
-            err.println("Failed: " + e.getMessage());
+            err.println("Failed: Router operation failed");
             return 1;
         } finally {
             Arrays.fill(password, '\0');
