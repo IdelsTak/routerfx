@@ -23,10 +23,6 @@ jobs:
           java-version: '26'
           cache: maven
 
-<<<<<<< Updated upstream
-      - name: Build with tests
-        run: mvn -B -ntp -Punit-tests verify
-=======
       - name: Resolve semver bump type from PR labels
         id: bump-type
         env:
@@ -105,7 +101,6 @@ jobs:
           git push origin HEAD:main --follow-tags
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
           echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
->>>>>>> Stashed changes
 
       - name: Package application
         run: mvn -B -ntp -DskipTests package
@@ -117,12 +112,9 @@ jobs:
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-<<<<<<< Updated upstream
-=======
           tag_name: ${{ steps.bump.outputs.tag }}
           name: ${{ steps.bump-type.outputs.title }}
           body: ${{ steps.bump-type.outputs.body }}
->>>>>>> Stashed changes
           files: |
             target/*.jar
             target/sha256sums.txt
