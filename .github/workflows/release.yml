@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Publish Release Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      - name: Build with tests
+        run: mvn -B -ntp -Punit-tests verify
+
+      - name: Package application
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Create checksums
+        run: |
+          sha256sum target/*.jar > target/sha256sums.txt
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/*.jar
+            target/sha256sums.txt
