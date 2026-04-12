@@ -133,8 +133,18 @@ jobs:
       - name: Package application
         run: mvn -B -ntp -DskipTests package
 
-      - name: Create checksums
-        run: sha256sum target/*.jar > target/sha256sums.txt
+      - name: Resolve release artifact path
+        id: artifact
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          FILE="target/routerfx-${VERSION}.jar"
+          if [[ ! -f "$FILE" ]]; then
+            echo "Expected release artifact not found: $FILE"
+            exit 1
+          fi
+          echo "jar=$FILE" >> "$GITHUB_OUTPUT"
 
       - name: Generate changelog file
         env:
@@ -152,7 +162,4 @@ jobs:
           tag_name: ${{ steps.bump.outputs.tag }}
           name: ${{ steps.bump.outputs.tag }}
           body_path: changelog.md
-          files: |
-            target/*.jar
-            target/sha256sums.txt
-            changelog.md
+          files: ${{ steps.artifact.outputs.jar }}
