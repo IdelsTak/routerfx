@@ -29,6 +29,24 @@ final class HttpRouterApiTest {
     }
 
     @Test
+    void fetchChallengeReturnsSessionExpiredFaultWhenEnvelopeReportsExpiredSession() {
+        var client = new FakeHttpClient(request ->
+          new FakeHttpResponse(200, "{\"cmd\":232,\"success\":false,\"message\":\"session expired\"}", request));
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchChallenge();
+        assertThat("Expected session-expired fault when envelope reports expired session", fault(result), instanceOf(RouterFault.SessionExpiredFault.class));
+    }
+
+    @Test
+    void fetchChallengeReturnsUnsupportedCommandFaultWhenEnvelopeReportsUnsupportedCommand() {
+        var client = new FakeHttpClient(request ->
+          new FakeHttpResponse(200, "{\"cmd\":232,\"success\":false,\"message\":\"unsupported command\"}", request));
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchChallenge();
+        assertThat("Expected unsupported-command fault when envelope reports unsupported command", fault(result), instanceOf(RouterFault.UnsupportedCommandFault.class));
+    }
+
+    @Test
     void loginReturnsSessionIdWhenRouterAcceptsCredentials() {
         var client = new FakeHttpClient(request ->
           new FakeHttpResponse(200, "{\"cmd\":100,\"success\":true,\"sessionId\":\"sess-001\"}", request));
@@ -73,8 +91,17 @@ final class HttpRouterApiTest {
     }
 
     @Test
+    void fetchChallengeReturnsTimeoutFaultWhenHttpClientTimesOut() {
+        var client = new TimeoutHttpClient();
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchChallenge();
+        assertThat("Expected timeout fault when HTTP client times out", fault(result), instanceOf(RouterFault.TimeoutFault.class));
+    }
+
+    @Test
     void fetchChallengeReturnsFailureWhenResponseHasNoJsonObject() {
-        var client = new FakeHttpClient(request -> new FakeHttpResponse(200, "plain-text-response", request));
+        var client = new FakeHttpClient(request ->
+          new FakeHttpResponse(200, "plain-text-response", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
         var result = api.fetchChallenge();
         assertThat("Expected malformed-response fault for non-json body", fault(result), instanceOf(RouterFault.MalformedResponseFault.class));
