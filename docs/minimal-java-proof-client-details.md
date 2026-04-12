@@ -2,6 +2,10 @@
 
 Implementation context: [RouterFX JavaFX App Unified Architecture](./javafx-unified-architecture.md)
 Implementation note: code packages are now split by capability (`shell.app`, `router.protocol`, `shared.value`, plus feature slices), while this document remains protocol evidence for minimal login and dashboard-read behavior.
+Current typed session invariant in code:
+- pre-login request session values are modeled as `PreLoginSessionId` (generated 64-char lowercase hex)
+- authenticated session state is modeled as `SessionId` (non-blank, no whitespace)
+- empty `sessionId` is limited to unauthenticated edge requests (`cmd:232` / polling), not authenticated domain session state
 
 ## 1. Minimal login contract
 

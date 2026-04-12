@@ -39,6 +39,12 @@ Do not use `Result<T>` for:
 - pure update/state transition logic
 - UI formatting/projection helpers
 
+Session identifier typing at boundary edges:
+
+- use `PreLoginSessionId` for `cmd:100` pre-auth login payloads
+- use `SessionId` for authenticated session state and authenticated commands (for example `cmd:205`)
+- keep unauthenticated challenge/polling requests with explicit empty `sessionId` at the HTTP edge only
+
 ## Contract Shape
 
 ```java
@@ -136,8 +142,9 @@ As of the current implementation state:
 - login/dashboard protocol command handling (`cmd:232`, `cmd:100`, `cmd:205`) is centralized at the protocol edge
 - boundary interfaces return `Result<T>` for challenge, login, and dashboard reads
 - protocol adapter maps transport/parsing/envelope failures to typed `RouterFault` values
+- session values are typed: `PreLoginSessionId` for login payload generation and `SessionId` for authenticated domain/session state
 - Proof CLI composes boundary calls with `flatMap` and resolves to CLI outcomes via `fold`
-- unit tests cover both success and failure mapping for the boundary methods
+- unit tests cover success/failure mapping for challenge, login, and dashboard reads, including `AuthFault`, `SessionExpiredFault`, `UnsupportedCommandFault`, `TimeoutFault`, `TransportFault`, and `MalformedResponseFault`
 
 ## Non-Goals
 

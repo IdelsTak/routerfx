@@ -52,7 +52,7 @@ final class HttpRouterApiTest {
           new FakeHttpResponse(200, "{\"cmd\":100,\"success\":true,\"sessionId\":\"sess-001\"}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
         var result = api.login(new Credentials("admin", "pw"), new Challenge("tok"));
-        assertThat("Expected authenticated session id", value(result).sessionId(), is("sess-001"));
+        assertThat("Expected authenticated session id", value(result).sessionId().value(), is("sess-001"));
     }
 
     @Test

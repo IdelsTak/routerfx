@@ -161,8 +161,8 @@ public final class HttpRouterApi implements RouterApi {
         return new Result.Success<>(raw.substring(idx).trim());
     }
 
-    private String generatePreLoginSessionId() {
-        return md5Hex(randomStringLikeJs()) + md5Hex(randomStringLikeJs());
+    private PreLoginSessionId generatePreLoginSessionId() {
+        return new PreLoginSessionId(md5Hex(randomStringLikeJs()) + md5Hex(randomStringLikeJs()));
     }
 
     private String randomStringLikeJs() {
