@@ -2,6 +2,7 @@ package com.github.idelstak.routerfx.router.protocol;
 
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.*;
+import com.github.idelstak.routerfx.shared.value.*;
 import java.util.*;
 
 final class RouterProtocolRequests {
@@ -23,11 +24,11 @@ final class RouterProtocolRequests {
         return request;
     }
 
-    ObjectNode login(String username, String passwd, String sessionId) {
+    ObjectNode login(String username, String passwd, PreLoginSessionId sessionId) {
         var request = mapper.createObjectNode();
         request.put("cmd", 100);
         request.put("method", "POST");
-        request.put("sessionId", sessionId);
+        request.put("sessionId", sessionId.value());
         request.put("username", username);
         request.put("passwd", passwd);
         request.put("isAutoUpgrade", "0");
@@ -35,12 +36,12 @@ final class RouterProtocolRequests {
         return request;
     }
 
-    ObjectNode radio(String sessionId) {
+    ObjectNode radio(SessionId sessionId) {
         var request = mapper.createObjectNode();
         request.put("cmd", 205);
         request.put("method", "GET");
         request.put("language", language);
-        request.put("sessionId", sessionId);
+        request.put("sessionId", sessionId.value());
         return request;
     }
 }

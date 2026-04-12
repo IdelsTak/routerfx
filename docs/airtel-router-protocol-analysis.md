@@ -185,7 +185,8 @@ Minimal Java client for login + `cmd:205` only:
    - `Cmd205Response getSysInfoNetwork(String sessionId)` for `cmd:205`
 4. Domain models
    - `Challenge{token}`
-   - `Session{sessionId, auth, userLevel}` (fields beyond `sessionId` optional if returned)
+   - `PreLoginSessionId{value}` for generated login payload `sessionId` (`cmd:100`)
+   - `Session{SessionId}` for authenticated session state (fields beyond `sessionId` optional if returned)
    - `Cmd205Response` grouped by domains above.
 5. Error model
    - Parse router JSON envelope (`success`, `message`, `cmd`) and return typed `Result.Failure` values at the router boundary.
