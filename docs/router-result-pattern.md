@@ -99,11 +99,11 @@ It does not leak raw transport exceptions outside the boundary.
 
 Effects convert boundary `Result` to messages:
 
-- `Result.Success<Session>` -> `LoginSucceeded`
-- `Result.Failure<Session>` with `AuthFault` -> `LoginFailed(AuthRejected)`
-- `Result.Failure<Session>` with `TimeoutFault` -> `LoginFailed(Timeout)`
+- `Result.Success<Session + RadioState>` -> `Authenticated`
+- `Result.Failure<Session>` with `AuthFault` -> `Failed(AuthFault)`
+- `Result.Failure<Session>` with `TimeoutFault` -> `Failed(TimeoutFault)`
 - `Result.Success<RadioState>` -> `DashboardLoaded`
-- `Result.Failure<RadioState>` with `SessionExpiredFault` -> `DashboardLoadFailed(SessionExpired)`
+- `Result.Failure<RadioState>` with `SessionExpiredFault` -> `Failed(SessionExpiredFault)`
 
 Update logic remains pure and deterministic. No exception handling inside update transitions.
 
@@ -111,15 +111,15 @@ Update logic remains pure and deterministic. No exception handling inside update
 
 Use `map` for success-value transformation, `flatMap` for boundary chaining, and `fold` at the edge to select the final output.
 
-Current RouterFX chain style:
+Current RouterFX boundary chain style:
 
 ```java
 api.fetchChallenge()
   .flatMap(challenge -> api.login(credentials, challenge))
-  .flatMap(api::fetchRadioState);
+  .flatMap(session -> api.fetchRadioState(session).map(radio -> new Msg.Authenticated(session, radio)));
 ```
 
-At UI/CLI edges, keep decision and side effects separate by mapping to an intermediate outcome in `fold`, then reporting in a second step.
+At store/effect edges, convert `Result` to follow-up `Msg` and dispatch that message back through the store.
 
 ## Testing Guidance
 
@@ -132,7 +132,7 @@ For each boundary method, test:
 For MVU effects, test:
 
 - `Result` to `Msg` mapping
-- retry/reconnect policy decisions by error type
+- follow-up message dispatch path through store
 
 ## Current Status
 
