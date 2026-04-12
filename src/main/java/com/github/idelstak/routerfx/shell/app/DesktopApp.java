@@ -22,12 +22,13 @@ public final class DesktopApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        var shell = new AppShell(factory, executor);
-        var pane = new DashboardPane(shell.store());
+        AppShell shell = new AppShell(factory, executor);
+        FxStore fxStore = new FxStore(shell.store());
+        DashboardPane pane = new DashboardPane(fxStore);
         stage.setTitle("RouterFX");
         stage.setScene(new Scene(pane.root(), 780, 860));
         stage.show();
-        shell.store().dispatch(new Msg.RefreshRequested());
+        fxStore.dispatch(new Msg.RefreshRequested());
     }
 
     public static void main(String[] args) {

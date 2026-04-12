@@ -3,9 +3,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-MAVEN_LOCAL_REPO="$(pwd)/.m2/repository"
-mkdir -p "$MAVEN_LOCAL_REPO"
-MVN_BASE=(mvn -B -ntp -Dmaven.repo.local="$MAVEN_LOCAL_REPO")
+MVN_BASE=(mvn -B -ntp)
+ORIGINAL_HOME="${HOME:-}"
 
 echo "Checking workflow files"
 if command -v actionlint >/dev/null 2>&1; then
@@ -32,7 +31,18 @@ echo "Running Maven verification for CI pipeline"
 
 echo "Running Maven UI test profile command"
 if rg -n '@Tag\("ui"\)' src/test >/dev/null 2>&1; then
-  xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' "${MVN_BASE[@]}" -Pui-tests test
+  UI_HOME="/tmp/routerfx-home"
+  UI_MAVEN_OPTS="${MAVEN_OPTS:-}"
+  echo "Preparing isolated JavaFX test home at $UI_HOME"
+  mkdir -p "$UI_HOME/.openjfx"
+  find "$UI_HOME/.openjfx" -name ".lock" -delete
+  if [[ -n "$ORIGINAL_HOME" ]]; then
+    UI_MAVEN_OPTS="$UI_MAVEN_OPTS -Dmaven.repo.local=$ORIGINAL_HOME/.m2/repository"
+  fi
+  HOME="$UI_HOME" \
+  JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Duser.home=$UI_HOME" \
+  MAVEN_OPTS="$UI_MAVEN_OPTS" \
+  "${MVN_BASE[@]}" -Pui-tests test
 else
-  echo "No UI-tagged tests found, skipping xvfb-run UI step"
+  echo "No UI-tagged tests found, skipping UI profile step"
 fi

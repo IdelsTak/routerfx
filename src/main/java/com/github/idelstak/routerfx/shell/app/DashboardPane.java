@@ -1,87 +1,43 @@
 package com.github.idelstak.routerfx.shell.app;
 
-import com.github.idelstak.routerfx.shared.value.*;
-import javafx.application.*;
-import javafx.geometry.*;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import com.github.idelstak.routerfx.shared.value.CommonDashboard;
+import com.github.idelstak.routerfx.shared.value.Credentials;
+import com.github.idelstak.routerfx.shared.value.RadioState;
+import java.util.Optional;
+import java.util.function.Function;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.StringBinding;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 public final class DashboardPane {
 
-    private final Store store;
+    private final FxStore fxStore;
     private final BorderPane root;
     private final TextField baseUrl;
     private final TextField username;
     private final PasswordField password;
     private final Button connect;
     private final Button refresh;
-    private final Label note;
-    private final Label networkType;
-    private final Label sim;
-    private final Label at;
-    private final Label wifi24;
-    private final Label wifi5;
-    private final Label lan;
-    private final Label rsrp;
-    private final Label rssi;
-    private final Label rsrq;
-    private final Label sinr;
-    private final Label pci;
-    private final Label earfcn;
-    private final Label ip;
-    private final Label wanMac;
-    private final Label primaryDns;
-    private final Label secondaryDns;
-    private final Label ipv6;
-    private final Label primaryIpv6Dns;
-    private final Label secondaryIpv6Dns;
-    private final Label runningTime;
-    private final Label firmwareVersion;
-    private final Label antennaStatus;
     private final VBox authenticated;
-    private final Label operator;
-    private final Label currentBand;
-    private final Label bandwidth;
-    private final Label uptime;
-    private final Label currentFlow;
 
-    public DashboardPane(Store store) {
-        this.store = store;
+    public DashboardPane(FxStore fxStore) {
+        this.fxStore = fxStore;
         this.baseUrl = new TextField();
         this.username = new TextField();
         this.password = new PasswordField();
         this.connect = new Button("Connect");
         this.refresh = new Button("Refresh");
-        this.note = new Label("-");
-        this.networkType = new Label("-");
-        this.sim = new Label("-");
-        this.at = new Label("-");
-        this.wifi24 = new Label("-");
-        this.wifi5 = new Label("-");
-        this.lan = new Label("-");
-        this.rsrp = new Label("-");
-        this.rssi = new Label("-");
-        this.rsrq = new Label("-");
-        this.sinr = new Label("-");
-        this.pci = new Label("-");
-        this.earfcn = new Label("-");
-        this.ip = new Label("-");
-        this.wanMac = new Label("-");
-        this.primaryDns = new Label("-");
-        this.secondaryDns = new Label("-");
-        this.ipv6 = new Label("-");
-        this.primaryIpv6Dns = new Label("-");
-        this.secondaryIpv6Dns = new Label("-");
-        this.runningTime = new Label("-");
-        this.firmwareVersion = new Label("-");
-        this.antennaStatus = new Label("-");
         this.authenticated = new VBox(8);
-        this.operator = new Label("-");
-        this.currentBand = new Label("-");
-        this.bandwidth = new Label("-");
-        this.uptime = new Label("-");
-        this.currentFlow = new Label("-");
         this.root = layout();
         wire();
     }
@@ -96,152 +52,117 @@ public final class DashboardPane {
         password.setId("passwordField");
         connect.setId("connectButton");
         refresh.setId("refreshButton");
-        note.setId("noteLabel");
-        networkType.setId("networkTypeValue");
-        sim.setId("simValue");
-        at.setId("atValue");
-        wifi24.setId("wifi24Value");
-        wifi5.setId("wifi5Value");
-        lan.setId("lanValue");
-        rsrp.setId("rsrpValue");
-        rssi.setId("rssiValue");
-        rsrq.setId("rsrqValue");
-        sinr.setId("sinrValue");
-        pci.setId("pciValue");
-        earfcn.setId("earfcnValue");
-        ip.setId("ipValue");
-        wanMac.setId("wanMacValue");
-        primaryDns.setId("primaryDnsValue");
-        secondaryDns.setId("secondaryDnsValue");
-        ipv6.setId("ipv6Value");
-        primaryIpv6Dns.setId("primaryIpv6DnsValue");
-        secondaryIpv6Dns.setId("secondaryIpv6DnsValue");
-        runningTime.setId("runningTimeValue");
-        firmwareVersion.setId("firmwareVersionValue");
-        antennaStatus.setId("antennaStatusValue");
-        authenticated.setId("authPanel");
-        operator.setId("operatorValue");
-        currentBand.setId("currentBandValue");
-        bandwidth.setId("bandwidthValue");
-        uptime.setId("uptimeValue");
-        currentFlow.setId("currentFlowValue");
-        baseUrl.setText("http://192.168.1.1");
-        username.setText("admin");
 
-        var login = new GridPane();
-        login.setHgap(8);
-        login.setVgap(8);
+        GridPane login = new GridPane(8, 8);
         login.add(new Label("Router URL"), 0, 0);
         login.add(baseUrl, 1, 0);
         login.add(new Label("Username"), 0, 1);
         login.add(username, 1, 1);
         login.add(new Label("Password"), 0, 2);
         login.add(password, 1, 2);
-        var actions = new HBox(8, connect, refresh);
-        login.add(actions, 1, 3);
+        login.add(new HBox(8, connect, refresh), 1, 3);
 
-        var common = new GridPane();
-        common.setHgap(8);
-        common.setVgap(6);
-        row(common, 0, "Network Type", networkType);
-        row(common, 1, "SIM", sim);
-        row(common, 2, "AT", at);
-        row(common, 3, "2.4 GHz Wi-Fi", wifi24);
-        row(common, 4, "5 GHz Wi-Fi", wifi5);
-        row(common, 5, "LAN", lan);
-        row(common, 6, "RSRP", rsrp);
-        row(common, 7, "RSSI", rssi);
-        row(common, 8, "RSRQ", rsrq);
-        row(common, 9, "SINR", sinr);
-        row(common, 10, "PCI", pci);
-        row(common, 11, "EARFCN", earfcn);
-        row(common, 12, "IP", ip);
-        row(common, 13, "WAN MAC", wanMac);
-        row(common, 14, "Primary DNS", primaryDns);
-        row(common, 15, "Secondary DNS", secondaryDns);
-        row(common, 16, "IPv6", ipv6);
-        row(common, 17, "Primary IPv6 DNS", primaryIpv6Dns);
-        row(common, 18, "Secondary IPv6 DNS", secondaryIpv6Dns);
-        row(common, 19, "Running Time", runningTime);
-        row(common, 20, "Firmware Version", firmwareVersion);
-        row(common, 21, "Antenna Status", antennaStatus);
+        Label note = value("noteLabel", state -> state.ui().note());
 
-        var auth = new GridPane();
-        auth.setHgap(8);
-        auth.setVgap(6);
-        row(auth, 0, "Operator", operator);
-        row(auth, 1, "Current Band", currentBand);
-        row(auth, 2, "Bandwidth", bandwidth);
-        row(auth, 3, "Uptime", uptime);
-        row(auth, 4, "Current Traffic", currentFlow);
-        authenticated.getChildren().addAll(new Label("Authenticated Dashboard"), auth);
-        authenticated.setManaged(false);
-        authenticated.setVisible(false);
+        GridPane commonGrid = new GridPane(8, 6);
+        row(commonGrid, 0, "Network Type", value("networkTypeValue", state -> commonValue(state.dashboard().common(), CommonDashboard::networkType)));
+        row(commonGrid, 1, "SIM", value("simValue", state -> commonValue(state.dashboard().common(), CommonDashboard::sim)));
+        row(commonGrid, 2, "AT", value("atValue", state -> commonValue(state.dashboard().common(), CommonDashboard::at)));
+        row(commonGrid, 3, "2.4 GHz Wi-Fi", value("wifi24Value", state -> commonValue(state.dashboard().common(), CommonDashboard::wifi24)));
+        row(commonGrid, 4, "5 GHz Wi-Fi", value("wifi5Value", state -> commonValue(state.dashboard().common(), CommonDashboard::wifi5)));
+        row(commonGrid, 5, "LAN", value("lanValue", state -> commonValue(state.dashboard().common(), CommonDashboard::lan)));
+        row(commonGrid, 6, "RSRP", value("rsrpValue", state -> commonValue(state.dashboard().common(), CommonDashboard::rsrp)));
+        row(commonGrid, 7, "RSSI", value("rssiValue", state -> commonValue(state.dashboard().common(), CommonDashboard::rssi)));
+        row(commonGrid, 8, "RSRQ", value("rsrqValue", state -> commonValue(state.dashboard().common(), CommonDashboard::rsrq)));
+        row(commonGrid, 9, "SINR", value("sinrValue", state -> commonValue(state.dashboard().common(), CommonDashboard::sinr)));
+        row(commonGrid, 10, "PCI", value("pciValue", state -> commonValue(state.dashboard().common(), CommonDashboard::pci)));
+        row(commonGrid, 11, "EARFCN", value("earfcnValue", state -> commonValue(state.dashboard().common(), CommonDashboard::earfcn)));
+        row(commonGrid, 12, "IP", value("ipValue", state -> commonValue(state.dashboard().common(), CommonDashboard::ip)));
+        row(commonGrid, 13, "WAN MAC", value("wanMacValue", state -> commonValue(state.dashboard().common(), CommonDashboard::wanMac)));
+        row(commonGrid, 14, "Primary DNS", value("primaryDnsValue", state -> commonValue(state.dashboard().common(), CommonDashboard::primaryDns)));
+        row(commonGrid, 15, "Secondary DNS", value("secondaryDnsValue", state -> commonValue(state.dashboard().common(), CommonDashboard::secondaryDns)));
+        row(commonGrid, 16, "IPv6", value("ipv6Value", state -> commonValue(state.dashboard().common(), CommonDashboard::ipv6)));
+        row(commonGrid, 17, "Primary IPv6 DNS", value("primaryIpv6DnsValue", state -> commonValue(state.dashboard().common(), CommonDashboard::primaryIpv6Dns)));
+        row(commonGrid, 18, "Secondary IPv6 DNS", value("secondaryIpv6DnsValue", state -> commonValue(state.dashboard().common(), CommonDashboard::secondaryIpv6Dns)));
+        row(commonGrid, 19, "Running Time", value("runningTimeValue", state -> commonValue(state.dashboard().common(), CommonDashboard::runningTime)));
+        row(commonGrid, 20, "Firmware Version", value("firmwareVersionValue", state -> commonValue(state.dashboard().common(), CommonDashboard::firmwareVersion)));
+        row(commonGrid, 21, "Antenna Status", value("antennaStatusValue", state -> commonValue(state.dashboard().common(), CommonDashboard::antennaStatus)));
 
-        var content = new VBox(12, new Label("RouterFX"), login, note, new Label("Common Dashboard"), common, authenticated);
-        content.setPadding(new Insets(12));
-        var pane = new BorderPane(content);
-        BorderPane.setMargin(content, new Insets(8));
-        return pane;
+        authenticated.setId("authPanel");
+        GridPane authGrid = new GridPane(8, 6);
+        row(authGrid, 0, "Operator", value("operatorValue", state -> radioValue(state, RadioState::networkOperator)));
+        row(authGrid, 1, "Current Band", value("currentBandValue", state -> radioValue(state, RadioState::currentBand)));
+        row(authGrid, 2, "Bandwidth", value("bandwidthValue", state -> radioValue(state, RadioState::bandwidth)));
+        row(authGrid, 3, "Uptime", value("uptimeValue", state -> radioValue(state, RadioState::onlineDuration)));
+        row(authGrid, 4, "Current Traffic", value("currentFlowValue", state -> radioValue(state, item -> item.flowDl() + "/" + item.flowUl())));
+        authenticated.getChildren().addAll(new Label("Authenticated Dashboard"), authGrid);
+
+        VBox content = new VBox(12, new Label("RouterFX"), login, note, new Label("Common Dashboard"), commonGrid, authenticated);
+        content.setPadding(new javafx.geometry.Insets(12));
+        return new BorderPane(content);
     }
 
-    private void row(GridPane grid, int index, String title, Label value) {
+    private void wire() {
+        syncLoginFields(fxStore.read());
+        fxStore.stateProperty().addListener((stateObserver, oldValue, newValue) -> syncLoginFields(newValue));
+
+        connect.setOnAction(event -> {
+            fxStore.dispatch(new Msg.ConnectRequested(
+              baseUrl.getText(),
+              new Credentials(username.getText(), password.getText())
+            ));
+            password.clear();
+        });
+        refresh.setOnAction(event -> fxStore.dispatch(new Msg.RefreshRequested()));
+        connect.disableProperty().bind(booleanValue(state -> state.ui().busy()));
+        refresh.disableProperty().bind(booleanValue(state -> !state.ui().canRefresh() || state.ui().busy()));
+
+        BooleanBinding authVisible = booleanValue(state -> state.login().session().isPresent() && state.dashboard().radio().isPresent());
+        authenticated.visibleProperty().bind(authVisible);
+        authenticated.managedProperty().bind(authVisible);
+    }
+
+    private void syncLoginFields(AppState state) {
+        String nextBaseUrl = state.login().baseUrl();
+        if (!baseUrl.isFocused() && !baseUrl.getText().equals(nextBaseUrl)) {
+            baseUrl.setText(nextBaseUrl);
+        }
+
+        String nextUsername = state.login().username();
+        if (!username.isFocused() && !username.getText().equals(nextUsername)) {
+            username.setText(nextUsername);
+        }
+    }
+
+    private Label value(String id, Function<AppState, String> projector) {
+        Label label = new Label("-");
+        label.setId(id);
+        label.textProperty().bind(stringValue(projector));
+        return label;
+    }
+
+    private StringBinding stringValue(Function<AppState, String> projector) {
+        return Bindings.createStringBinding(() -> safe(projector.apply(fxStore.stateProperty().get())), fxStore.stateProperty());
+    }
+
+    private BooleanBinding booleanValue(Function<AppState, Boolean> projector) {
+        return Bindings.createBooleanBinding(() -> projector.apply(fxStore.stateProperty().get()), fxStore.stateProperty());
+    }
+
+    private void row(GridPane grid, int index, String title, Labeled value) {
         grid.add(new Label(title), 0, index);
         grid.add(value, 1, index);
     }
 
-    private void wire() {
-        connect.setOnAction(event -> {
-            store.dispatch(new Msg.ConnectRequested(baseUrl.getText(), new Credentials(username.getText(), password.getText())));
-            password.clear();
-        });
-        refresh.setOnAction(event -> store.dispatch(new Msg.RefreshRequested()));
-        store.watch(state -> Platform.runLater(() -> render(state)));
+    private String commonValue(Optional<CommonDashboard> common, Function<CommonDashboard, String> projector) {
+        return common.map(projector).orElse("-");
     }
 
-    private void render(AppState state) {
-        baseUrl.setText(state.login().baseUrl());
-        username.setText(state.login().username());
-        connect.setDisable(state.ui().busy());
-        refresh.setDisable(!state.ui().canRefresh() || state.ui().busy());
-        note.setText(state.ui().note());
-        state.dashboard().common().ifPresent(this::common);
-        var show = state.login().session().isPresent() && state.dashboard().radio().isPresent();
-        authenticated.setManaged(show);
-        authenticated.setVisible(show);
-        state.dashboard().radio().ifPresent(this::radio);
+    private String radioValue(AppState state, Function<RadioState, String> projector) {
+        return state.dashboard().radio().map(projector).orElse("-");
     }
 
-    private void common(CommonDashboard common) {
-        networkType.setText(common.networkType());
-        sim.setText(common.sim());
-        at.setText(common.at());
-        wifi24.setText(common.wifi24());
-        wifi5.setText(common.wifi5());
-        lan.setText(common.lan());
-        rsrp.setText(common.rsrp());
-        rssi.setText(common.rssi());
-        rsrq.setText(common.rsrq());
-        sinr.setText(common.sinr());
-        pci.setText(common.pci());
-        earfcn.setText(common.earfcn());
-        ip.setText(common.ip());
-        wanMac.setText(common.wanMac());
-        primaryDns.setText(common.primaryDns());
-        secondaryDns.setText(common.secondaryDns());
-        ipv6.setText(common.ipv6());
-        primaryIpv6Dns.setText(common.primaryIpv6Dns());
-        secondaryIpv6Dns.setText(common.secondaryIpv6Dns());
-        runningTime.setText(common.runningTime());
-        firmwareVersion.setText(common.firmwareVersion());
-        antennaStatus.setText(common.antennaStatus());
-    }
-
-    private void radio(RadioState radio) {
-        operator.setText(radio.networkOperator());
-        currentBand.setText(radio.currentBand());
-        bandwidth.setText(radio.bandwidth());
-        uptime.setText(radio.onlineDuration());
-        currentFlow.setText(radio.flowDl() + "/" + radio.flowUl());
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "-" : value;
     }
 }
