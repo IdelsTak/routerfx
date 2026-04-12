@@ -143,6 +143,24 @@ final class HttpRouterApiTest {
         assertThat("Expected core flow to return normalized network type", value(radio).networkTypeStr(), is("LTE"));
     }
 
+    @Test
+    void fetchCommonDashboardReturnsPreLoginMetricsFromProtocolResponses() {
+        var index = new AtomicInteger(0);
+        var client = new FakeHttpClient(request -> {
+            var current = index.getAndIncrement();
+            if (current == 0) {
+                return new FakeHttpResponse(200, "{\"cmd\":80,\"success\":true,\"antenna_status\":\"all\"}", request);
+            }
+            if (current == 1) {
+                return new FakeHttpResponse(200, "{\"cmd\":113,\"success\":true,\"network_type_str\":\"4G+\",\"sim_status\":\"1\",\"wlan2g_switch_0\":\"1\",\"wlan5g_switch_0\":\"1\",\"wired_link_list\":[\"LAN2\"]}", request);
+            }
+            return new FakeHttpResponse(200, "{\"cmd\":133,\"success\":true,\"RSRP\":\"-77\",\"RSRP_5G\":\"\",\"RSSI\":\"-78\",\"RSSI_5G\":\"\",\"RSRQ\":\"-10\",\"RSRQ_5G\":\"\",\"SINR\":\"10\",\"SINR_5G\":\"\",\"PCI\":\"475+475\",\"PCI_5G\":\"\",\"FREQ\":\"124+1351\",\"FREQ_5G\":\"\",\"wan_ip\":\"10.129.71.22\",\"wan_mac\":\"4ee4e8d6572a\",\"wan_dns\":\"102.216.71.102\",\"wan_dns2\":\"8.8.8.8\",\"wan_ipv6_ip\":\"\",\"wan_ipv6_dns\":\"\",\"wan_ipv6_dns2\":\"\",\"uptime\":\"65609\",\"fake_version\":\"4.15.6\"}", request);
+        });
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchCommonDashboard();
+        assertThat("Expected pre-login common dashboard to expose network type", value(result).networkType(), is("4G+"));
+    }
+
     private <T> T value(Result<T> result) {
         return result.fold(value -> value, fault -> {
             throw new AssertionError("Expected success but got fault: " + fault);

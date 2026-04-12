@@ -38,9 +38,10 @@ The app uses unidirectional MVU flow:
 1. User action in JavaFX view emits a `Msg`.
 2. `Store` receives the message and asks `Update` for the next `State`.
 3. `Update` returns a new immutable state (pure decision logic only).
-4. `Store` publishes the new state through an observable JavaFX property.
-5. Views are bound to projected state and re-render automatically.
-6. Side effects (HTTP, hashing, time, thread orchestration) run outside `Update` and publish result messages back into the store.
+4. `Store` publishes the new state snapshot to observers.
+5. `FxStore` mirrors snapshots into a JavaFX `ReadOnlyObjectProperty<AppState>`.
+6. Views are bound to projected `FxStore` state and re-render automatically.
+7. Side effects (HTTP, hashing, time, thread orchestration) run outside `Update` and publish result messages back into the store.
 
 This keeps domain behavior deterministic and side effects isolated at system edges.
 
@@ -108,9 +109,9 @@ Forbidden responsibilities:
 
 `Store` owns:
 
-- current `AppState` in `ReadOnlyObjectProperty<AppState>` exposure
+- current immutable `AppState`
 - a message dispatch API
-- synchronization with JavaFX Application Thread
+- synchronous state transition application through `Update`
 
 On dispatch:
 
@@ -120,6 +121,8 @@ On dispatch:
 
 The store is the only writable owner of application state.
 
+JavaFX thread publication is handled by `FxStore`, which mirrors core store snapshots to a JavaFX `ReadOnlyObjectProperty<AppState>` via `Platform.runLater(...)`.
+
 ### 5) Effect Orchestrator
 
 `Effect` is an interface with implementations per side-effect family.
@@ -127,7 +130,9 @@ The store is the only writable owner of application state.
 Examples:
 
 - `LoginEffect`
-- `DashboardEffect`
+- `RefreshEffect`
+
+`FlowEffects` composes feature effects and delegates based on message type.
 
 Effects run blocking work on virtual threads and return only messages, never direct state mutation.
 
@@ -177,8 +182,10 @@ Current implementation status:
 - `com.github.idelstak.routerfx.shell.app` is implemented for app/CLI bootstrap flow.
 - `com.github.idelstak.routerfx.router.protocol` is implemented for HTTP/protocol edge adapters.
 - `com.github.idelstak.routerfx.shared.value` is implemented for immutable shared value records.
-- `com.github.idelstak.routerfx.auth.login` currently hosts login boundary contracts and is ready for full MVU login slice expansion.
-- `com.github.idelstak.routerfx.dashboard.network` currently hosts dashboard boundary contracts and is ready for full MVU dashboard slice expansion.
+- `Store` + `FxStore` hybrid state publication is implemented and enforces JavaFX thread affinity at the adapter boundary.
+- `FlowEffects` now delegates to feature-scoped effect objects (`LoginEffect`, `RefreshEffect`).
+- `DesktopApp` + `DashboardPane` are implemented for login, common pre-login dashboard metrics, authenticated dashboard metrics, and refresh flow.
+- `DesktopAppTest` TestFX coverage is implemented for connect/refresh success paths, failure paths, and loading-state button behavior.
 
 ## Coding Guideline Alignment
 
@@ -200,7 +207,7 @@ Where a guideline and JavaFX framework mechanics conflict, framework constraints
 
 - JavaFX Application Thread owns UI node mutation.
 - Virtual threads run blocking IO and hashing operations.
-- Store dispatch marshals state publication onto JavaFX thread.
+- `FxStore` marshals JavaFX property publication onto the JavaFX thread.
 - Effect handlers never block UI thread.
 
 For multi-call workflows, use structured concurrency and convert completion/failure to result messages.

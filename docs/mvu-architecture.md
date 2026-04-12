@@ -10,6 +10,12 @@ Boundary outcome contract reference: [RouterFX Result Pattern at Boundaries](./r
 
 This memo describes how to implement a clean Model-View-Update (MVU) architecture in JavaFX using only Java 26 and the JavaFX SDK. The pattern enforces unidirectional data flow, immutable state, and predictable rendering — without requiring RxJava, Reactor, or any other reactive library. All reactive primitives needed are already present in the JDK and JavaFX.
 
+Implementation note for this repository:
+
+- This document is an MVU reference memo and some snippets are intentionally simplified.
+- The authoritative RouterFX target and current-state details live in `javafx-unified-architecture.md`.
+- Current RouterFX code uses a framework-agnostic core `Store` plus a JavaFX `FxStore` adapter for thread-safe property publication.
+
 ![MVU Architecture — Unidirectional Data Flow](./mvu-architecture.png)
 
 ## Layer 1 — Model: Immutable State and Messages
@@ -30,7 +36,7 @@ public record AppState(
 }
 ```
 
-Use **sealed interfaces with nested records** to define your message types. The compiler enforces exhaustiveness — if you add a new message type and forget to handle it in `update()`, it is a compile error, not a runtime surprise.
+Use **sealed interfaces with nested records** to define your message types. The compiler enforces exhaustiveness - if you add a new message type and forget to handle it in `update()`, it is a compile error, not a runtime surprise.
 
 ```java
 public sealed interface Msg permits
@@ -45,84 +51,94 @@ public sealed interface Msg permits
 
 ## Layer 2 — Update: Pure State Transitions
 
-The `update()` function is the entire business logic of the application. It takes the current state and a message, and returns a new state. It must have **no side effects** — no I/O, no UI calls, no threading. This makes it trivially unit-testable.
+The `update()` function is the entire business logic of the application. It takes the current state and a message, and returns a new state. It must have **no side effects** - no I/O, no UI calls, no threading. This makes it trivially unit-testable.
 
 ```java
-public class Update {
-    public static AppState update(AppState state, Msg msg) {
+public interface Update {
+    AppState apply(AppState state, Msg msg);
+}
+
+public final class StateUpdate implements Update {
+    @Override
+    public AppState apply(AppState state, Msg msg) {
         return switch (msg) {
-            case Msg.Increment()          -> new AppState(state.count() + 1, "incremented", state.items());
-            case Msg.Decrement()          -> new AppState(state.count() - 1, "decremented", state.items());
-            case Msg.ItemAdded(var item)  -> new AppState(
-                                                state.count(),
-                                                "item added",
-                                                Stream.concat(state.items().stream(), Stream.of(item)).toList()
-                                            );
-            case Msg.ItemsLoaded(var all) -> new AppState(state.count(), "loaded", all);
+            case Msg.ConnectRequested(var baseUrl, var credentials) ->
+                connect(state, baseUrl, credentials);
+            case Msg.RefreshRequested _ ->
+                refresh(state);
+            case Msg.Authenticated(var session, var radio) ->
+                authenticate(state, session, radio);
+            case Msg.Failed(var fault) ->
+                fail(state, fault);
+            default ->
+                state;
         };
     }
 }
 ```
 
-Pattern matching on sealed types also lets you destructure message payloads inline (as shown with `ItemAdded` and `ItemsLoaded`), eliminating boilerplate getters.
+Pattern matching on sealed types also lets you destructure message payloads inline (for example `ConnectRequested` and `Authenticated`), eliminating boilerplate getters.
 
 ## Layer 3 — Store: The Reactive Backbone
 
-The `Store` is the single source of truth. It holds state in a JavaFX `ObjectProperty<AppState>`, which is already an observable container. Any listener registered on it will be notified automatically when state changes — this is JavaFX's built-in reactive primitive.
+The `Store` is the single source of truth for immutable state transitions.
+
+In RouterFX, JavaFX observation is handled by an adapter (`FxStore`) that mirrors `Store` snapshots into a `ReadOnlyObjectProperty<AppState>` on the JavaFX Application Thread.
 
 ```java
-public class Store {
-    private final ObjectProperty<AppState> state =
-        new SimpleObjectProperty<>(new AppState(0, "ready", List.of()));
+public final class Store {
+    private final Update update;
+    private final Effect effect;
+    private final Executor executor;
+    private final List<Consumer<AppState>> watchers = new ArrayList<>();
+    private AppState state;
 
-    public void dispatch(Msg msg) {
-        // All state mutations must happen on the JavaFX Application Thread
-        Platform.runLater(() -> state.set(Update.update(state.get(), msg)));
+    public Store(AppState state, Update update, Effect effect, Executor executor) {
+        this.state = state;
+        this.update = update;
+        this.effect = effect;
+        this.executor = executor;
     }
 
-    public ReadOnlyObjectProperty<AppState> stateProperty() {
+    public synchronized AppState read() {
         return state;
     }
 
-    public AppState getState() {
-        return state.get();
+    public void dispatch(Msg msg) {
+        var snapshot = mutate(msg);
+        executor.execute(() -> effect.apply(snapshot, msg).ifPresent(this::dispatch));
+    }
+
+    public void watch(Consumer<AppState> watch) {
+        var snapshot = register(watch);
+        watch.accept(snapshot);
     }
 }
 ```
 
-Expose only `ReadOnlyObjectProperty` to the outside world. Views can observe state, but only the store can write it. This is the boundary that enforces unidirectional flow.
+Expose only `ReadOnlyObjectProperty` to the outside world from the JavaFX adapter. Views can observe state, but only the core store can write it. This is the boundary that enforces unidirectional flow.
 
 ## Layer 4 — View: Declarative Bindings
 
-Views observe the store's state property and update UI elements reactively. JavaFX's `ObservableValue.map()` (available since JavaFX 19) lets you project specific fields from state into bindings without manual listeners.
+Views observe the `FxStore` state property and update UI elements reactively. JavaFX's `ObservableValue.map()` (available since JavaFX 19) lets you project specific fields from state into bindings without manual listeners.
 
 ```java
-public class CounterView {
+public final class FxStore {
     private final Store store;
+    private final ReadOnlyObjectWrapper<AppState> state;
 
-    public CounterView(Store store) { this.store = store; }
+    public FxStore(Store store) {
+        this.store = store;
+        this.state = new ReadOnlyObjectWrapper<>(store.read());
+        store.watch(snapshot -> Platform.runLater(() -> state.set(snapshot)));
+    }
 
-    public Node build() {
-        Label countLabel = new Label();
-        Label statusLabel = new Label();
-        Button incBtn = new Button("+");
-        Button decBtn = new Button("−");
-        Button loadBtn = new Button("Load items");
+    public ReadOnlyObjectProperty<AppState> stateProperty() {
+        return state.getReadOnlyProperty();
+    }
 
-        // Derive bindings directly from projected state fields
-        countLabel.textProperty().bind(
-            store.stateProperty().map(s -> String.valueOf(s.count()))
-        );
-        statusLabel.textProperty().bind(
-            store.stateProperty().map(AppState::status)
-        );
-
-        // Events dispatch messages — no logic here
-        incBtn.setOnAction(e -> store.dispatch(new Msg.Increment()));
-        decBtn.setOnAction(e -> store.dispatch(new Msg.Decrement()));
-        loadBtn.setOnAction(e -> store.dispatchAsync(new Msg.ItemsLoaded(List.of())));
-
-        return new VBox(10, countLabel, statusLabel, incBtn, decBtn, loadBtn);
+    public void dispatch(Msg msg) {
+        store.dispatch(msg);
     }
 }
 ```
@@ -131,45 +147,42 @@ Views contain zero business logic. They translate state into UI and user gesture
 
 ## Handling Async Side Effects with Virtual Threads
 
-Some messages trigger I/O — API calls, database queries, file reads. These must never block the JavaFX Application Thread. Virtual threads (GA since Java 21) handle this without callbacks or schedulers.
+Some messages trigger I/O - API calls, database queries, file reads. These must never block the JavaFX Application Thread. Virtual threads (GA since Java 21) handle this without callbacks or schedulers.
 
-The pattern is: dispatch a message to trigger the effect, run the I/O on a virtual thread, then dispatch the result as a new message. The `Platform.runLater()` inside `dispatch()` handles the thread boundary automatically.
+The pattern is: dispatch a message, let `Effect` do the blocking boundary work off the UI thread, then dispatch the result message back into the store. In RouterFX, JavaFX thread publication is handled at the `FxStore` adapter boundary.
 
 ```java
-public class Store {
+public interface Effect {
+    Optional<Msg> apply(AppState state, Msg msg);
+}
 
-    // Async dispatch: runs the side effect off the UI thread, then feeds result back
-    public void dispatchAsync(Supplier<Msg> sideEffect) {
-        Thread.ofVirtual().start(() -> {
-            Msg result = sideEffect.get();  // I/O happens here, off UI thread
-            dispatch(result);               // Platform.runLater() is inside dispatch()
-        });
+public final class FlowEffects implements Effect {
+    private final List<Effect> effects;
+
+    @Override
+    public Optional<Msg> apply(AppState state, Msg msg) {
+        for (Effect effect : effects) {
+            Optional<Msg> result = effect.apply(state, msg);
+            if (result.isPresent()) {
+                return result;
+            }
+        }
+        return Optional.empty();
     }
 }
-```
-
-At the call site in the view:
-
-```java
-loadBtn.setOnAction(e ->
-    store.dispatchAsync(() -> {
-        List<String> items = itemRepository.fetchAll();  // blocking I/O — fine on virtual thread
-        return new Msg.ItemsLoaded(items);
-    })
-);
 ```
 
 For more complex multi-step effects (parallel API calls, fan-out/fan-in), use `StructuredTaskScope`:
 
 ```java
-store.dispatchAsync(() -> {
+executor.execute(() -> {
     try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
         var userTask  = scope.fork(() -> userService.fetch(id));
         var itemsTask = scope.fork(() -> itemService.fetchAll(id));
         scope.join().throwIfFailed();
-        return new Msg.DashboardLoaded(userTask.get(), itemsTask.get());
+        store.dispatch(new Msg.DashboardLoaded(userTask.get(), itemsTask.get()));
     } catch (Exception e) {
-        return new Msg.LoadFailed(e.getMessage());
+        store.dispatch(new Msg.Failed(new RouterFault.TransportFault(e.getMessage())));
     }
 });
 ```
@@ -195,27 +208,26 @@ This keeps failure handling explicit in effects and keeps `update()` exception-f
 
 ## Wiring It All Together
 
-The application entry point creates one store, one view, and connects them:
+The application entry point creates one core store, one `FxStore` adapter, and connects the view:
 
 ```java
-public class App extends Application {
+public final class DesktopApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        Store store = new Store();
-        CounterView view = new CounterView(store);
+        var store = new Store(initialState, new StateUpdate(), effects, executor);
+        var fxStore = new FxStore(store);
+        var root = new DashboardPane(fxStore).view();
 
-        Scene scene = new Scene(new BorderPane(view.build()), 400, 300);
+        Scene scene = new Scene(root, 960, 640);
         stage.setScene(scene);
-        stage.setTitle("MVU Demo");
+        stage.setTitle("RouterFX");
         stage.show();
     }
-
-    public static void main(String[] args) { launch(args); }
 }
 ```
 
-The store is typically a singleton or passed by constructor injection. Avoid passing it through deeply nested view hierarchies — prefer scoping sub-views to the parts of state they actually need, using `store.stateProperty().map(...)` to narrow the observable.
+The store is passed by constructor injection. Avoid passing it through deeply nested view hierarchies - prefer scoping sub-views to the parts of state they actually need, using `fxStore.stateProperty().map(...)` to narrow the observable.
 
 ## Key Design Rules
 
@@ -231,4 +243,4 @@ There are four rules that, if followed consistently, prevent the architecture fr
 
 ## Summary
 
-Java 26 and JavaFX provide everything needed for a production-quality MVU application. Records and sealed interfaces give you a type-safe, immutable model layer. `ObjectProperty<AppState>` serves as the reactive state container. `ObservableValue.map()` and `Bindings` replace reactive operators for view projection. Virtual threads and `StructuredTaskScope` replace schedulers and `flatMap` chains for async side effects. The result is an architecture that is simpler to debug, easier to test, and requires no external reactive framework.
+Java 26 and JavaFX provide everything needed for a production-quality MVU application. Records and sealed interfaces give you a type-safe, immutable model layer. In RouterFX, `FxStore` publishes an observable `ReadOnlyObjectProperty<AppState>` backed by a framework-agnostic core store. `ObservableValue.map()` and `Bindings` replace reactive operators for view projection. Virtual threads and `StructuredTaskScope` replace schedulers and `flatMap` chains for async side effects. The result is an architecture that is simpler to debug, easier to test, and requires no external reactive framework.

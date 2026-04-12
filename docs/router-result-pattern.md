@@ -119,7 +119,7 @@ api.fetchChallenge()
   .flatMap(session -> api.fetchRadioState(session).map(radio -> new Msg.Authenticated(session, radio)));
 ```
 
-At store/effect edges, convert `Result` to follow-up `Msg` and dispatch that message back through the store.
+At store/effect edges, convert `Result` to follow-up `Msg` and dispatch that message back through the store. Keep side effects outside `fold` branches when practical, and use `fold` for explicit final branching/output selection.
 
 ## Testing Guidance
 
@@ -143,6 +143,7 @@ As of the current implementation state:
 - boundary interfaces return `Result<T>` for challenge, login, and dashboard reads
 - protocol adapter maps transport/parsing/envelope failures to typed `RouterFault` values
 - session values are typed: `PreLoginSessionId` for login payload generation and `SessionId` for authenticated domain/session state
+- effect handling is split into feature-scoped objects (`LoginEffect`, `RefreshEffect`) and composed via `FlowEffects`
 - Proof CLI composes boundary calls with `flatMap` and resolves to CLI outcomes via `fold`
 - unit tests cover success/failure mapping for challenge, login, and dashboard reads, including `AuthFault`, `SessionExpiredFault`, `UnsupportedCommandFault`, `TimeoutFault`, `TransportFault`, and `MalformedResponseFault`
 
