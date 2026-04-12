@@ -23,7 +23,7 @@ final class StateUpdateTest {
         var update = new StateUpdate();
         var state = update.apply(
           AppState.initial(),
-          new Msg.Authenticated(new Session("sess-3"), radio())
+          new Msg.Authenticated(new Session("sess-3"), radio(), statusBar())
         );
         assertThat("Expected authenticated transition to enable refresh", state.ui().canRefresh(), is(true));
     }
@@ -33,7 +33,7 @@ final class StateUpdateTest {
         var update = new StateUpdate();
         var afterAuth = update.apply(
           AppState.initial(),
-          new Msg.Authenticated(new Session("sess-7"), radio())
+          new Msg.Authenticated(new Session("sess-7"), radio(), statusBar())
         );
         var state = update.apply(afterAuth, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
         assertThat("Expected session-expiry fault to clear session", state.login().session().isEmpty(), is(true));
@@ -44,7 +44,7 @@ final class StateUpdateTest {
         var update = new StateUpdate();
         var afterAuth = update.apply(
           AppState.initial(),
-          new Msg.Authenticated(new Session("sess-7"), radio())
+          new Msg.Authenticated(new Session("sess-7"), radio(), statusBar())
         );
         var state = update.apply(afterAuth, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
         assertThat("Expected session-expiry fault to set UI as disconnected", state.ui().connected(), is(false));
@@ -55,7 +55,7 @@ final class StateUpdateTest {
         var update = new StateUpdate();
         var afterAuth = update.apply(
           AppState.initial(),
-          new Msg.Authenticated(new Session("sess-7"), radio())
+          new Msg.Authenticated(new Session("sess-7"), radio(), statusBar())
         );
         var state = update.apply(afterAuth, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
         assertThat("Expected session-expiry fault to show reconnect guidance", state.ui().note(), is("Session expired. Please sign in again."));
@@ -70,5 +70,9 @@ final class StateUpdateTest {
 
     private RadioState radio() {
         return new RadioState("Åirtel", "LTE", "-91", "-63", "-12", "18", "B3", "20M", "10", "3", "00:01:00", "60");
+    }
+
+    private StatusBarState statusBar() {
+        return new StatusBarState("4", "LTE", "SIM", "0");
     }
 }

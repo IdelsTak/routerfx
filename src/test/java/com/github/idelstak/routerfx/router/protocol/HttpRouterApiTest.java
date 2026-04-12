@@ -83,6 +83,24 @@ final class HttpRouterApiTest {
     }
 
     @Test
+    void fetchStatusBarReturnsSignalLevelFromRouterResponse() {
+        var payload = "{\"cmd\":394,\"success\":true,\"signal_lvl\":\"5\",\"network_type_str\":\"4G+\",\"sim_status\":\"1\",\"sms_unread\":\"0\"}";
+        var client = new FakeHttpClient(request -> new FakeHttpResponse(200, payload, request));
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchStatusBar(new Session("sess"));
+        assertThat("Expected signal level from status-bar response", value(result).signalLevel(), is("5"));
+    }
+
+    @Test
+    void fetchStatusBarReturnsFailureWhenPayloadIsMalformed() {
+        var payload = "{\"cmd\":394,\"success\":true,\"sim_status\":\"1\"}";
+        var client = new FakeHttpClient(request -> new FakeHttpResponse(200, payload, request));
+        var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());
+        var result = api.fetchStatusBar(new Session("sess"));
+        assertThat("Expected malformed-response fault when required status-bar fields are missing", fault(result), instanceOf(RouterFault.MalformedResponseFault.class));
+    }
+
+    @Test
     void fetchChallengeReturnsFailureWhenHttpStatusIsNotOk() {
         var client = new FakeHttpClient(request -> new FakeHttpResponse(500, "{}", request));
         var api = new HttpRouterApi("http://router.local", "en", client, new ObjectMapper());

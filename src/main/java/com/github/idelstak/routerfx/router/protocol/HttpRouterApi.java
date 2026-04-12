@@ -97,6 +97,12 @@ public final class HttpRouterApi implements RouterApi {
               responses.common(initPage, sysStatus, routerInfo))));
     }
 
+    @Override
+    public Result<StatusBarState> fetchStatusBar(Session session) {
+        Objects.requireNonNull(session, "session must not be null");
+        return post(requests.statusBar(session.sessionId())).flatMap(responses::statusBar);
+    }
+
     private Result<JsonNode> post(ObjectNode requestJson) {
         return serialize(requestJson).flatMap(this::request).flatMap(this::envelope);
     }

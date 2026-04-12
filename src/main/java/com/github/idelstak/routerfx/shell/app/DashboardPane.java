@@ -84,7 +84,12 @@ public final class DashboardPane {
         row(authGrid, 2, "Bandwidth", value("bandwidthValue", state -> radioValue(state, RadioState::bandwidth)));
         row(authGrid, 3, "Uptime", value("uptimeValue", state -> radioValue(state, RadioState::onlineDuration)));
         row(authGrid, 4, "Current Traffic", value("currentFlowValue", state -> radioValue(state, item -> item.flowDl() + "/" + item.flowUl())));
-        authenticated.getChildren().addAll(new Label("Authenticated Dashboard"), authGrid);
+        GridPane statusGrid = new GridPane(8, 6);
+        row(statusGrid, 0, "Signal Level", value("statusSignalValue", state -> statusBarValue(state, StatusBarState::signalLevel)));
+        row(statusGrid, 1, "Network Type", value("statusNetworkTypeValue", state -> statusBarValue(state, StatusBarState::networkType)));
+        row(statusGrid, 2, "SIM", value("statusSimValue", state -> statusBarValue(state, StatusBarState::sim)));
+        row(statusGrid, 3, "SMS Unread", value("statusSmsValue", state -> statusBarValue(state, StatusBarState::smsUnread)));
+        authenticated.getChildren().addAll(new Label("Authenticated Dashboard"), authGrid, new Label("Status Bar"), statusGrid);
 
         VBox content = new VBox(12, new Label("RouterFX"), login, note, new Label("Common Dashboard"), commonGrid, authenticated);
         content.setPadding(new javafx.geometry.Insets(12));
@@ -149,6 +154,10 @@ public final class DashboardPane {
 
     private String radioValue(AppState state, Function<RadioState, String> projector) {
         return state.dashboard().radio().map(projector).orElse("-");
+    }
+
+    private String statusBarValue(AppState state, Function<StatusBarState, String> projector) {
+        return state.dashboard().statusBar().map(projector).orElse("-");
     }
 
     private String safe(String value) {

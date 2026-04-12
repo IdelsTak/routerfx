@@ -17,18 +17,20 @@ public sealed interface Msg {
     record RefreshRequested() implements Msg {
     }
 
-    record Authenticated(Session session, RadioState radio) implements Msg {
+    record Authenticated(Session session, RadioState radio, StatusBarState statusBar) implements Msg {
 
         public Authenticated {
             Objects.requireNonNull(session, "session must not be null");
             Objects.requireNonNull(radio, "radio must not be null");
+            Objects.requireNonNull(statusBar, "statusBar must not be null");
         }
     }
 
-    record DashboardLoaded(RadioState radio) implements Msg {
+    record DashboardLoaded(RadioState radio, StatusBarState statusBar) implements Msg {
 
         public DashboardLoaded {
             Objects.requireNonNull(radio, "radio must not be null");
+            Objects.requireNonNull(statusBar, "statusBar must not be null");
         }
     }
 

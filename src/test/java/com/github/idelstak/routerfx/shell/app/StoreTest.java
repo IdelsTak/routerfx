@@ -23,7 +23,7 @@ final class StoreTest {
         var update = new StateUpdate();
         Effect effect = (AppState _, Msg msg) -> switch (msg) {
             case Msg.ConnectRequested _ ->
-                Optional.of(new Msg.Authenticated(new Session("sess-x"), radio()));
+                Optional.of(new Msg.Authenticated(new Session("sess-x"), radio(), statusBar()));
             case Msg.RefreshRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
                 Optional.empty();
         };
@@ -41,7 +41,7 @@ final class StoreTest {
             case Msg.ConnectRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
                 Optional.empty();
         };
-        var authenticated = update.apply(AppState.initial(), new Msg.Authenticated(new Session("sess-y"), radio()));
+        var authenticated = update.apply(AppState.initial(), new Msg.Authenticated(new Session("sess-y"), radio(), statusBar()));
         var store = new Store(authenticated, update, effect, Runnable::run);
         store.dispatch(new Msg.RefreshRequested());
         assertThat("Expected timeout failure to stay in state via failed message", store.read().dashboard().fault().isPresent(), is(true));
@@ -49,5 +49,9 @@ final class StoreTest {
 
     private RadioState radio() {
         return new RadioState("Åirtel", "LTE", "-88", "-58", "-9", "24", "B28", "20M", "33", "8", "00:05:00", "300");
+    }
+
+    private StatusBarState statusBar() {
+        return new StatusBarState("5", "4G+", "SIM", "0");
     }
 }

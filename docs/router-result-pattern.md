@@ -30,7 +30,7 @@ Use `Result<T>` at system boundaries only.
 Use `Result<T>` for:
 
 - HTTP transport adapter responses
-- protocol command execution (`cmd:232`, `cmd:100`, `cmd:205`)
+- protocol command execution (`cmd:232`, `cmd:100`, `cmd:205`, `cmd:394`)
 - parsing boundary from raw response to typed payload
 
 Do not use `Result<T>` for:
@@ -139,7 +139,7 @@ For MVU effects, test:
 As of the current implementation state:
 
 - package split toward vertical slices is in place (`shell.app`, `shell.cli`, `auth.login`, `dashboard.network`, `router.protocol`, `shared.value`)
-- login/dashboard protocol command handling (`cmd:232`, `cmd:100`, `cmd:205`) is centralized at the protocol edge
+- login/dashboard protocol command handling (`cmd:232`, `cmd:100`, `cmd:205`, `cmd:394`) is centralized at the protocol edge
 - boundary interfaces return `Result<T>` for challenge, login, and dashboard reads
 - protocol adapter maps transport/parsing/envelope failures to typed `RouterFault` values
 - session values are typed: `PreLoginSessionId` for login payload generation and `SessionId` for authenticated domain/session state

@@ -40,7 +40,7 @@ final class FlowEffectsTest {
     @Test
     void refreshRequestedEmitsDashboardLoadedWhenSessionExists() {
         var effect = flowEffects(baseUrl -> okApi());
-        var state = new StateUpdate().apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio()));
+        var state = new StateUpdate().apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio(), statusBar()));
         var msg = effect.apply(state, new Msg.RefreshRequested()).orElseThrow();
         assertThat("Expected refresh effect to emit dashboard-loaded message", msg, instanceOf(Msg.DashboardLoaded.class));
     }
@@ -68,6 +68,11 @@ final class FlowEffectsTest {
             }
 
             @Override
+            public Result<StatusBarState> fetchStatusBar(Session session) {
+                return new Result.Success<>(statusBar());
+            }
+
+            @Override
             public Result<CommonDashboard> fetchCommonDashboard() {
                 return new Result.Success<>(common());
             }
@@ -92,6 +97,11 @@ final class FlowEffectsTest {
             }
 
             @Override
+            public Result<StatusBarState> fetchStatusBar(Session session) {
+                return new Result.Success<>(statusBar());
+            }
+
+            @Override
             public Result<CommonDashboard> fetchCommonDashboard() {
                 return new Result.Success<>(common());
             }
@@ -104,5 +114,9 @@ final class FlowEffectsTest {
 
     private CommonDashboard common() {
         return new CommonDashboard("4G+", "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", "-77dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.0.0.2", "AA:BB:CC:DD:EE:FF", "8.8.8.8", "1.1.1.1", "-", "-", "-", "01:01:01", "4.15.6", "All Direction");
+    }
+
+    private StatusBarState statusBar() {
+        return new StatusBarState("5", "4G+", "SIM", "0");
     }
 }

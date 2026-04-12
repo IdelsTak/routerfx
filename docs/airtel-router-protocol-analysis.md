@@ -146,6 +146,31 @@ Schema grouped by logical domains from HAR `43` response:
 9. Additional status/meta:
    - `signal_lvl`, `network_type_str`, `network_operator`, `current_real_wan_prio`, `first_mode`, `systime`, `network_redcap`, `mimo_status`
 
+## cmd 394 schema (status bar)
+
+Observed authenticated request body (HAR `30`, `44`):
+
+- `{"cmd":394,"method":"GET","sessionId":"<auth_sid>","language":"en"}`
+
+Observed response envelope:
+
+- `success`, `cmd`
+
+Observed response payload includes:
+
+- `signal_lvl`
+- `network_type_str`
+- `sim_status`
+- `sms_unread`
+- plus additional status fields (`wired_link_list`, Wi-Fi switches, roam/data flags, and other feature flags)
+
+Current RouterFX normalized field set for `cmd:394`:
+
+- `signal_lvl` -> `StatusBarState.signalLevel`
+- `network_type_str` -> `StatusBarState.networkType`
+- `sim_status` -> `StatusBarState.sim` (`1` -> `SIM`, else `No SIM`)
+- `sms_unread` -> `StatusBarState.smsUnread`
+
 ## Minimal replay flow
 
 Minimum non-browser flow to authenticate and fetch `cmd:205` (evidence-backed):

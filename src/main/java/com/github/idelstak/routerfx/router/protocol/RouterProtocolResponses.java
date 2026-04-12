@@ -73,6 +73,12 @@ final class RouterProtocolResponses {
         ));
     }
 
+    Result<StatusBarState> statusBar(JsonNode node) {
+        return required(node, "signal_lvl").flatMap(signal ->
+          required(node, "network_type_str").map(network ->
+            new StatusBarState(signal, network, sim(node), text(node, "sms_unread"))));
+    }
+
     private Result<String> required(JsonNode node, String fieldName) {
         var value = node.get(fieldName);
         if (value == null || value.isNull()) {

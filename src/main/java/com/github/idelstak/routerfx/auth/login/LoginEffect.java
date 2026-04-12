@@ -29,7 +29,9 @@ public final class LoginEffect implements Effect {
             RouterApi api = apiFactory.create(baseUrl);
             Result<Msg> response = api.fetchChallenge()
               .flatMap(challenge -> api.login(credentials, challenge))
-              .flatMap(session -> api.fetchRadioState(session).map(radio -> (Msg) new Msg.Authenticated(session, radio)));
+              .flatMap(session -> api.fetchRadioState(session)
+                .flatMap(radio -> api.fetchStatusBar(session)
+                  .map(statusBar -> (Msg) new Msg.Authenticated(session, radio, statusBar))));
             return message(response);
         } catch (RuntimeException issue) {
             return new Msg.Failed(new RouterFault.TransportFault(issue.getClass().getSimpleName()));
