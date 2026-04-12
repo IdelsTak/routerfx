@@ -172,6 +172,7 @@ Use capability-oriented packages, not technical-layer buckets.
 - `routerfx.auth.login` : login state/messages/update/effects/view wiring
 - `routerfx.dashboard.network` : dashboard state/messages/update/effects/view wiring
 - `routerfx.shell.app` : root state composition, root store, app bootstrap
+- `routerfx.shell.cli` : CLI entry flow, secure password input, CLI reporting
 - `routerfx.router.protocol` : HTTP transport + command adapters + response mapping
 - `routerfx.shared.value` : small immutable value objects used across slices
 
@@ -179,11 +180,12 @@ Avoid package names such as `util`, `manager`, `service`, `model`, or `dao`.
 
 Current implementation status:
 
-- `com.github.idelstak.routerfx.shell.app` is implemented for app/CLI bootstrap flow.
+- `com.github.idelstak.routerfx.shell.app` is implemented for app bootstrap, root state, update, and store wiring.
+- `com.github.idelstak.routerfx.shell.cli` is implemented for CLI flow and secure password input.
 - `com.github.idelstak.routerfx.router.protocol` is implemented for HTTP/protocol edge adapters.
 - `com.github.idelstak.routerfx.shared.value` is implemented for immutable shared value records.
 - `Store` + `FxStore` hybrid state publication is implemented and enforces JavaFX thread affinity at the adapter boundary.
-- `FlowEffects` now delegates to feature-scoped effect objects (`LoginEffect`, `RefreshEffect`).
+- `FlowEffects` delegates to feature-scoped effect objects in vertical slices (`auth.login.LoginEffect`, `dashboard.network.RefreshEffect`, `dashboard.network.PeriodicRefreshEffect`).
 - `DesktopApp` + `DashboardPane` are implemented for login, common pre-login dashboard metrics, authenticated dashboard metrics, and refresh flow.
 - `DesktopAppTest` TestFX coverage is implemented for connect/refresh success paths, failure paths, and loading-state button behavior.
 

@@ -18,6 +18,7 @@ public final class Store {
         this.effect = Objects.requireNonNull(effect, "effect must not be null");
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
         this.watchers = new ArrayList<>();
+        this.effect.attach(this::dispatch);
     }
 
     public synchronized AppState read() {

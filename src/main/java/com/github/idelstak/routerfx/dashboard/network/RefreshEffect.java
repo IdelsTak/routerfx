@@ -1,14 +1,15 @@
-package com.github.idelstak.routerfx.shell.app;
+package com.github.idelstak.routerfx.dashboard.network;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shell.app.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import java.util.*;
 
-final class RefreshEffect implements Effect {
+public final class RefreshEffect implements Effect {
 
     private final RouterApiFactory apiFactory;
 
-    RefreshEffect(RouterApiFactory apiFactory) {
+    public RefreshEffect(RouterApiFactory apiFactory) {
         this.apiFactory = Objects.requireNonNull(apiFactory, "apiFactory must not be null");
     }
 

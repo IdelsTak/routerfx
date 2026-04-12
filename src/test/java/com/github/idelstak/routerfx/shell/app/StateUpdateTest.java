@@ -39,6 +39,35 @@ final class StateUpdateTest {
         assertThat("Expected session-expiry fault to clear session", state.login().session().isEmpty(), is(true));
     }
 
+    @Test
+    void failedWithSessionExpiryMarksStateAsDisconnected() {
+        var update = new StateUpdate();
+        var afterAuth = update.apply(
+          AppState.initial(),
+          new Msg.Authenticated(new Session("sess-7"), radio())
+        );
+        var state = update.apply(afterAuth, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
+        assertThat("Expected session-expiry fault to set UI as disconnected", state.ui().connected(), is(false));
+    }
+
+    @Test
+    void failedWithSessionExpiryShowsReconnectMessage() {
+        var update = new StateUpdate();
+        var afterAuth = update.apply(
+          AppState.initial(),
+          new Msg.Authenticated(new Session("sess-7"), radio())
+        );
+        var state = update.apply(afterAuth, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
+        assertThat("Expected session-expiry fault to show reconnect guidance", state.ui().note(), is("Session expired. Please sign in again."));
+    }
+
+    @Test
+    void failedWithAuthFaultShowsAuthenticationMessage() {
+        var update = new StateUpdate();
+        var state = update.apply(AppState.initial(), new Msg.Failed(new RouterFault.AuthFault("invalid")));
+        assertThat("Expected auth fault to show authentication message", state.ui().note(), is("Authentication failed"));
+    }
+
     private RadioState radio() {
         return new RadioState("Åirtel", "LTE", "-91", "-63", "-12", "18", "B3", "20M", "10", "3", "00:01:00", "60");
     }

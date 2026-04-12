@@ -1,6 +1,7 @@
 package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shell.cli.*;
 
 public final class Main {
 

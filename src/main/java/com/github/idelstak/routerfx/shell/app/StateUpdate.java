@@ -67,15 +67,16 @@ public final class StateUpdate implements Update {
     }
 
     private AppState fail(AppState state, RouterFault fault) {
+        Optional<Session> session = session(state.login().session(), fault);
         return new AppState(
           new LoginState(
             state.login().baseUrl(),
             state.login().username(),
-            session(state.login().session(), fault),
+            session,
             Optional.of(fault)
           ),
           new DashboardState(state.dashboard().common(), state.dashboard().radio(), Optional.of(fault), false, state.dashboard().updates()),
-          new UiState(false, state.login().session().isPresent(), "Failed", true)
+          new UiState(false, session.isPresent(), note(fault), true)
         );
     }
 
@@ -85,6 +86,21 @@ public final class StateUpdate implements Update {
                 Optional.empty();
             case RouterFault.TimeoutFault _, RouterFault.TransportFault _, RouterFault.ProtocolFault _, RouterFault.MalformedResponseFault _, RouterFault.UnsupportedCommandFault _ ->
                 session;
+        };
+    }
+
+    private String note(RouterFault fault) {
+        return switch (fault) {
+            case RouterFault.AuthFault _ ->
+                "Authentication failed";
+            case RouterFault.SessionExpiredFault _ ->
+                "Session expired. Please sign in again.";
+            case RouterFault.TimeoutFault _ ->
+                "Router request timed out";
+            case RouterFault.TransportFault _ ->
+                "Router is unreachable";
+            case RouterFault.ProtocolFault _, RouterFault.MalformedResponseFault _, RouterFault.UnsupportedCommandFault _ ->
+                "Router response could not be processed";
         };
     }
 }

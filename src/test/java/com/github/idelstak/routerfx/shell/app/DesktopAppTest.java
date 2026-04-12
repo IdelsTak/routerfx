@@ -176,7 +176,7 @@ final class DesktopAppTest extends ApplicationTest {
     void connectFailureShowsFailedNote() {
         loginResult = (credentials, challenge) -> new Result.Failure<>(new RouterFault.AuthFault("wrong password"));
         connect();
-        assertThat("Expected failed login to set failed note", lookup("#noteLabel").queryLabeled().getText(), is("Failed"));
+        assertThat("Expected failed login to set authentication note", lookup("#noteLabel").queryLabeled().getText(), is("Authentication failed"));
     }
 
     @Test
@@ -201,6 +201,52 @@ final class DesktopAppTest extends ApplicationTest {
         assertThat("Expected existing operator to remain when refresh fails", lookup("#operatorValue").queryLabeled().getText(), is("Airtel Africa"));
     }
 
+    @Test
+    void periodicRefreshBeforeLoginUpdatesCommonDashboardWithoutManualRefresh() {
+        commonResult = () -> new Result.Success<>(common("5G", "19:00:00"));
+        waitForCondition(() -> "5G".equals(lookup("#networkTypeValue").queryLabeled().getText()), 8);
+        assertThat("Expected periodic refresh to update common dashboard before login", lookup("#networkTypeValue").queryLabeled().getText(), is("5G"));
+    }
+
+    @Test
+    void sessionExpiryAfterLoginShowsReconnectMessage() {
+        AtomicBoolean first = new AtomicBoolean(true);
+        radioResult = session -> first.getAndSet(false)
+          ? new Result.Success<>(radio("Airtel Africa", "0-8-2-19", "8298.12"))
+          : new Result.Failure<>(new RouterFault.SessionExpiredFault("expired"));
+        connect();
+        clickOn("#refreshButton");
+        waitForCondition(() -> "Session expired. Please sign in again.".equals(lookup("#noteLabel").queryLabeled().getText()));
+        assertThat("Expected session-expiry refresh to show reconnect message", lookup("#noteLabel").queryLabeled().getText(), is("Session expired. Please sign in again."));
+    }
+
+    @Test
+    void sessionExpiryAfterLoginHidesAuthenticatedPanel() {
+        AtomicBoolean first = new AtomicBoolean(true);
+        radioResult = session -> first.getAndSet(false)
+          ? new Result.Success<>(radio("Airtel Africa", "0-8-2-19", "8298.12"))
+          : new Result.Failure<>(new RouterFault.SessionExpiredFault("expired"));
+        connect();
+        clickOn("#refreshButton");
+        waitForCondition(() -> !lookup("#authPanel").query().isVisible());
+        assertThat("Expected session-expiry refresh to hide authenticated panel", lookup("#authPanel").query().isVisible(), is(false));
+    }
+
+    @Test
+    void sessionExpiryAfterLoginStillAllowsCommonRefresh() {
+        AtomicBoolean first = new AtomicBoolean(true);
+        radioResult = session -> first.getAndSet(false)
+          ? new Result.Success<>(radio("Airtel Africa", "0-8-2-19", "8298.12"))
+          : new Result.Failure<>(new RouterFault.SessionExpiredFault("expired"));
+        connect();
+        clickOn("#refreshButton");
+        waitForCondition(() -> "Session expired. Please sign in again.".equals(lookup("#noteLabel").queryLabeled().getText()));
+        commonResult = () -> new Result.Success<>(common("5G", "19:00:00"));
+        clickOn("#refreshButton");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected common dashboard refresh to work after session-expiry fallback", lookup("#networkTypeValue").queryLabeled().getText(), is("5G"));
+    }
+
     private void replaceText(String fieldId, String text) {
         clickOn(fieldId);
         press(KeyCode.CONTROL, KeyCode.A);
@@ -213,12 +259,16 @@ final class DesktopAppTest extends ApplicationTest {
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
         clickOn("#connectButton");
-        waitForCondition(() -> lookup("#authPanel").query().isVisible() || "Failed".equals(lookup("#noteLabel").queryLabeled().getText()));
+        waitForCondition(() -> lookup("#authPanel").query().isVisible() || "Authentication failed".equals(lookup("#noteLabel").queryLabeled().getText()));
     }
 
     private void waitForCondition(Supplier<Boolean> condition) {
+        waitForCondition(condition, 5);
+    }
+
+    private void waitForCondition(Supplier<Boolean> condition, int seconds) {
         try {
-            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, condition::get);
+            WaitForAsyncUtils.waitFor(seconds, TimeUnit.SECONDS, condition::get);
         } catch (TimeoutException issue) {
             fail("Condition timed out: " + issue.getMessage());
         }

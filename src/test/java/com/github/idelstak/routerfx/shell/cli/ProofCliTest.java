@@ -1,4 +1,4 @@
-package com.github.idelstak.routerfx.shell.app;
+package com.github.idelstak.routerfx.shell.cli;
 
 import com.github.idelstak.routerfx.router.protocol.*;
 import com.github.idelstak.routerfx.shared.result.*;
