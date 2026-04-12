@@ -68,7 +68,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run verification with JaCoCo
-        run: mvn -B -ntp -Punit-tests verify
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' mvn -B -ntp verify
 
       - name: Generate JaCoCo badges
         run: ./scripts/update-coverage-badge.sh
