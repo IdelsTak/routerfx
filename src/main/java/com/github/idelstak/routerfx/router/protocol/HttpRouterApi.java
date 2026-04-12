@@ -89,6 +89,14 @@ public final class HttpRouterApi implements RouterApi {
         return post(requests.radio(session.sessionId())).flatMap(responses::radio);
     }
 
+    @Override
+    public Result<CommonDashboard> fetchCommonDashboard() {
+        return post(requests.initPage()).flatMap(initPage ->
+          post(requests.sysStatus()).flatMap(sysStatus ->
+            post(requests.routerInfo()).flatMap(routerInfo ->
+              responses.common(initPage, sysStatus, routerInfo))));
+    }
+
     private Result<JsonNode> post(ObjectNode requestJson) {
         return serialize(requestJson).flatMap(this::request).flatMap(this::envelope);
     }

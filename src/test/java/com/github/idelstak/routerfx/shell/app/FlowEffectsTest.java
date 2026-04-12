@@ -30,10 +30,10 @@ final class FlowEffectsTest {
     }
 
     @Test
-    void refreshRequestedEmitsFailedWhenSessionIsMissing() {
+    void refreshRequestedEmitsCommonLoadedWhenSessionIsMissing() {
         var effect = new FlowEffects(baseUrl -> okApi());
         var msg = effect.apply(AppState.initial(), new Msg.RefreshRequested()).orElseThrow();
-        assertThat("Expected refresh effect to fail when no session exists", msg, instanceOf(Msg.Failed.class));
+        assertThat("Expected refresh effect to emit common-loaded when no session exists", msg, instanceOf(Msg.CommonLoaded.class));
     }
 
     @Test
@@ -60,6 +60,11 @@ final class FlowEffectsTest {
             public Result<RadioState> fetchRadioState(Session session) {
                 return new Result.Success<>(radio());
             }
+
+            @Override
+            public Result<CommonDashboard> fetchCommonDashboard() {
+                return new Result.Success<>(common());
+            }
         };
     }
 
@@ -79,10 +84,19 @@ final class FlowEffectsTest {
             public Result<RadioState> fetchRadioState(Session session) {
                 return new Result.Success<>(radio());
             }
+
+            @Override
+            public Result<CommonDashboard> fetchCommonDashboard() {
+                return new Result.Success<>(common());
+            }
         };
     }
 
     private RadioState radio() {
         return new RadioState("Åirtel", "LTE", "-90", "-65", "-10", "21", "B3", "20M", "20", "5", "00:03:00", "180");
+    }
+
+    private CommonDashboard common() {
+        return new CommonDashboard("4G+", "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", "-77dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.0.0.2", "AA:BB:CC:DD:EE:FF", "8.8.8.8", "1.1.1.1", "-", "-", "-", "01:01:01", "4.15.6", "All Direction");
     }
 }

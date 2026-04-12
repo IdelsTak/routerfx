@@ -24,7 +24,7 @@ final class StoreTest {
         Effect effect = (AppState _, Msg msg) -> switch (msg) {
             case Msg.ConnectRequested _ ->
                 Optional.of(new Msg.Authenticated(new Session("sess-x"), radio()));
-            case Msg.RefreshRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.Failed _ ->
+            case Msg.RefreshRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
                 Optional.empty();
         };
         var store = new Store(AppState.initial(), update, effect, Runnable::run);
@@ -38,7 +38,7 @@ final class StoreTest {
         Effect effect = (AppState _, Msg msg) -> switch (msg) {
             case Msg.RefreshRequested _ ->
                 Optional.of(new Msg.Failed(new RouterFault.TimeoutFault("slow")));
-            case Msg.ConnectRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.Failed _ ->
+            case Msg.ConnectRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
                 Optional.empty();
         };
         var authenticated = update.apply(AppState.initial(), new Msg.Authenticated(new Session("sess-y"), radio()));

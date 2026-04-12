@@ -44,4 +44,31 @@ final class RouterProtocolRequests {
         request.put("sessionId", sessionId.value());
         return request;
     }
+
+    ObjectNode initPage() {
+        var request = mapper.createObjectNode();
+        request.put("cmd", 80);
+        request.put("method", "GET");
+        request.put("sessionId", "");
+        request.put("language", language);
+        return request;
+    }
+
+    ObjectNode sysStatus() {
+        var request = mapper.createObjectNode();
+        request.put("cmd", 113);
+        request.put("method", "GET");
+        request.put("sessionId", "");
+        request.put("language", language);
+        return request;
+    }
+
+    ObjectNode routerInfo() {
+        var request = mapper.createObjectNode();
+        request.put("cmd", 133);
+        request.put("method", "GET");
+        request.put("sessionId", "");
+        request.put("language", language);
+        return request;
+    }
 }

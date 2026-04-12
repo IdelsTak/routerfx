@@ -32,6 +32,13 @@ public sealed interface Msg {
         }
     }
 
+    record CommonLoaded(CommonDashboard common) implements Msg {
+
+        public CommonLoaded {
+            Objects.requireNonNull(common, "common must not be null");
+        }
+    }
+
     record Failed(RouterFault fault) implements Msg {
 
         public Failed {

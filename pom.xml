@@ -13,6 +13,7 @@
     <junit.version>6.1.0-M1</junit.version>
     <hamcrest.version>3.0</hamcrest.version>
     <testfx.version>4.0.18</testfx.version>
+    <javafx.version>27-ea+12</javafx.version>
     <surefire.version>3.5.5</surefire.version>
     <jacoco.version>0.8.14</jacoco.version>
     <skip.ui.tests>false</skip.ui.tests>
@@ -26,6 +27,11 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>2.21.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${javafx.version}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -117,6 +123,14 @@
         <version>3.6.3</version>
         <configuration>
           <mainClass>com.github.idelstak.routerfx.shell.app.Main</mainClass>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+        <configuration>
+          <mainClass>com.github.idelstak.routerfx.shell.app.DesktopApp</mainClass>
         </configuration>
       </plugin>
     </plugins>

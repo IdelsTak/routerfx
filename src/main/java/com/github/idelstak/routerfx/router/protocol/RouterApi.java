@@ -2,6 +2,13 @@ package com.github.idelstak.routerfx.router.protocol;
 
 import com.github.idelstak.routerfx.auth.login.*;
 import com.github.idelstak.routerfx.dashboard.network.*;
+import com.github.idelstak.routerfx.shared.result.*;
+import com.github.idelstak.routerfx.shared.value.*;
 
-public interface RouterApi extends ChallengePort, LoginPort, DashboardPort {
+public interface RouterApi extends ChallengePort, LoginPort, DashboardPort, CommonDashboardPort {
+
+    @Override
+    default Result<CommonDashboard> fetchCommonDashboard() {
+        return new Result.Failure<>(new RouterFault.UnsupportedCommandFault("Common dashboard command set is unavailable"));
+    }
 }

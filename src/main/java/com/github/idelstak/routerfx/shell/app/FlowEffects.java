@@ -20,7 +20,7 @@ public final class FlowEffects implements Effect {
               Optional.of(connect(baseUrl, credentials));
             case Msg.RefreshRequested _ ->
               Optional.of(refresh(state));
-            case Msg.Authenticated _, Msg.DashboardLoaded _, Msg.Failed _ ->
+            case Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
               Optional.empty();
         };
     }
@@ -47,7 +47,19 @@ public final class FlowEffects implements Effect {
                   return new Msg.Failed(new RouterFault.TransportFault(issue.getClass().getSimpleName()));
               }
           })
-          .orElseGet(() -> new Msg.Failed(new RouterFault.AuthFault("Session missing")));
+          .orElseGet(() -> common(state.login().baseUrl()));
+    }
+
+    private Msg common(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return new Msg.Failed(new RouterFault.TransportFault("Router base URL is missing"));
+        }
+        try {
+            var api = apiFactory.create(baseUrl);
+            return message(api.fetchCommonDashboard().map(common -> (Msg) new Msg.CommonLoaded(common)));
+        } catch (RuntimeException issue) {
+            return new Msg.Failed(new RouterFault.TransportFault(issue.getClass().getSimpleName()));
+        }
     }
 
     private Msg message(Result<Msg> result) {
