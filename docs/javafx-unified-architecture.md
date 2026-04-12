@@ -31,6 +31,8 @@ This architecture covers the first product slice:
 
 All other command families are out of scope for this document and follow the same extension pattern.
 
+Read-only command expansion process is defined in `read-only-command-expansion-workflow.md`.
+
 ## Architecture Summary
 
 The app uses unidirectional MVU flow:
@@ -187,6 +189,7 @@ Current implementation status:
 - `Store` + `FxStore` hybrid state publication is implemented and enforces JavaFX thread affinity at the adapter boundary.
 - `FlowEffects` delegates to feature-scoped effect objects in vertical slices (`auth.login.LoginEffect`, `dashboard.network.RefreshEffect`, `dashboard.network.PeriodicRefreshEffect`).
 - `DesktopApp` + `DashboardPane` are implemented for login, common pre-login dashboard metrics, authenticated dashboard metrics, and refresh flow.
+- Authenticated read-only status-bar add-on (`cmd:394`) is integrated and rendered as a small authenticated panel.
 - `DesktopAppTest` TestFX coverage is implemented for connect/refresh success paths, failure paths, and loading-state button behavior.
 
 ## Coding Guideline Alignment

@@ -15,7 +15,7 @@ public record AppState(LoginState login, DashboardState dashboard, UiState ui) {
     public static AppState initial() {
         return new AppState(
           new LoginState("http://192.168.1.1", "admin", Optional.empty(), Optional.empty()),
-          new DashboardState(Optional.empty(), Optional.empty(), Optional.empty(), false, 0),
+          new DashboardState(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), false, 0),
           new UiState(false, false, "Idle", true)
         );
     }

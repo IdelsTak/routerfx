@@ -28,7 +28,9 @@ public final class RefreshEffect implements Effect {
           .map(session -> {
               try {
                   RouterApi api = apiFactory.create(state.login().baseUrl());
-                  return message(api.fetchRadioState(session).map(radio -> (Msg) new Msg.DashboardLoaded(radio)));
+                  return message(api.fetchRadioState(session)
+                    .flatMap(radio -> api.fetchStatusBar(session)
+                      .map(statusBar -> (Msg) new Msg.DashboardLoaded(radio, statusBar))));
               } catch (RuntimeException issue) {
                   return new Msg.Failed(new RouterFault.TransportFault(issue.getClass().getSimpleName()));
               }

@@ -28,8 +28,8 @@ final class PeriodicRefreshEffectTest {
         effect.attach(msg -> {
         });
         effect.apply(AppState.initial(), new Msg.RefreshRequested());
-        var authenticatedState = new StateUpdate().apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio()));
-        effect.apply(authenticatedState, new Msg.Authenticated(new Session("sess-1"), radio()));
+        var authenticatedState = new StateUpdate().apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio(), statusBar()));
+        effect.apply(authenticatedState, new Msg.Authenticated(new Session("sess-1"), radio(), statusBar()));
         assertThat("Expected authenticated state to run only authenticated loop", start.activeDescription(), is("9:0,4:1"));
     }
 
@@ -40,8 +40,8 @@ final class PeriodicRefreshEffectTest {
         effect.attach(msg -> {
         });
         var update = new StateUpdate();
-        var authenticated = update.apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio()));
-        effect.apply(authenticated, new Msg.Authenticated(new Session("sess-1"), radio()));
+        var authenticated = update.apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio(), statusBar()));
+        effect.apply(authenticated, new Msg.Authenticated(new Session("sess-1"), radio(), statusBar()));
         var recovered = update.apply(authenticated, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
         effect.apply(recovered, new Msg.Failed(new RouterFault.SessionExpiredFault("expired")));
         assertThat("Expected session-expiry transition to stop authenticated loop and resume common loop", start.activeDescription(), is("9:1,4:0"));
@@ -60,5 +60,9 @@ final class PeriodicRefreshEffectTest {
 
     private RadioState radio() {
         return new RadioState("Åirtel", "LTE", "-85", "-62", "-9", "20", "B3", "20M", "1", "1", "00:01:00", "12");
+    }
+
+    private StatusBarState statusBar() {
+        return new StatusBarState("4", "LTE", "SIM", "0");
     }
 }

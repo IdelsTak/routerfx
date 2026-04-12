@@ -71,4 +71,13 @@ final class RouterProtocolRequests {
         request.put("language", language);
         return request;
     }
+
+    ObjectNode statusBar(SessionId sessionId) {
+        var request = mapper.createObjectNode();
+        request.put("cmd", 394);
+        request.put("method", "GET");
+        request.put("sessionId", sessionId.value());
+        request.put("language", language);
+        return request;
+    }
 }

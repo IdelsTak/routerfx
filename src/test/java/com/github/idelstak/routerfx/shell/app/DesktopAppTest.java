@@ -24,6 +24,7 @@ final class DesktopAppTest extends ApplicationTest {
     private Supplier<Result<Challenge>> challengeResult;
     private BiFunction<Credentials, Challenge, Result<Session>> loginResult;
     private Function<Session, Result<RadioState>> radioResult;
+    private Function<Session, Result<StatusBarState>> statusBarResult;
     private Supplier<Result<CommonDashboard>> commonResult;
 
     @BeforeEach
@@ -31,6 +32,7 @@ final class DesktopAppTest extends ApplicationTest {
         challengeResult = () -> new Result.Success<>(new Challenge("tok"));
         loginResult = (credentials, challenge) -> new Result.Success<>(new Session("sess-1"));
         radioResult = session -> new Result.Success<>(radio("Airtel Africa", "0-8-2-19", "8298.12"));
+        statusBarResult = session -> new Result.Success<>(statusBar("5", "4G+", "SIM", "0"));
         commonResult = () -> new Result.Success<>(common("4G+", "18:13:29"));
     }
 
@@ -132,6 +134,12 @@ final class DesktopAppTest extends ApplicationTest {
     void connectActionShowsOperatorAfterLogin() {
         connect();
         assertThat("Expected authenticated panel to show operator value", lookup("#operatorValue").queryLabeled().getText(), is("Airtel Africa"));
+    }
+
+    @Test
+    void connectActionShowsStatusSignalAfterLogin() {
+        connect();
+        assertThat("Expected authenticated status panel to show signal level", lookup("#statusSignalValue").queryLabeled().getText(), is("5"));
     }
 
     @Test
@@ -309,9 +317,18 @@ final class DesktopAppTest extends ApplicationTest {
             }
 
             @Override
+            public Result<StatusBarState> fetchStatusBar(Session session) {
+                return statusBarResult.apply(session);
+            }
+
+            @Override
             public Result<CommonDashboard> fetchCommonDashboard() {
                 return commonResult.get();
             }
         };
+    }
+
+    private StatusBarState statusBar(String signal, String networkType, String sim, String unread) {
+        return new StatusBarState(signal, networkType, sim, unread);
     }
 }
