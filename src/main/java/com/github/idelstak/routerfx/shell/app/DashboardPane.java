@@ -1,23 +1,12 @@
 package com.github.idelstak.routerfx.shell.app;
 
-import com.github.idelstak.routerfx.shared.value.CommonDashboard;
-import com.github.idelstak.routerfx.shared.value.Credentials;
-import com.github.idelstak.routerfx.shared.value.RadioState;
-import java.util.Optional;
-import java.util.function.Function;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.StringBinding;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Labeled;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import com.github.idelstak.routerfx.shared.value.*;
+import java.util.*;
+import java.util.function.*;
+import javafx.beans.binding.*;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 public final class DashboardPane {
 
@@ -104,16 +93,16 @@ public final class DashboardPane {
 
     private void wire() {
         syncLoginFields(fxStore.read());
-        fxStore.stateProperty().addListener((stateObserver, oldValue, newValue) -> syncLoginFields(newValue));
+        fxStore.stateProperty().addListener((_, _, newValue) -> syncLoginFields(newValue));
 
-        connect.setOnAction(event -> {
+        connect.setOnAction(_ -> {
             fxStore.dispatch(new Msg.ConnectRequested(
               baseUrl.getText(),
               new Credentials(username.getText(), password.getText())
             ));
             password.clear();
         });
-        refresh.setOnAction(event -> fxStore.dispatch(new Msg.RefreshRequested()));
+        refresh.setOnAction(_ -> fxStore.dispatch(new Msg.RefreshRequested()));
         connect.disableProperty().bind(booleanValue(state -> state.ui().busy()));
         refresh.disableProperty().bind(booleanValue(state -> !state.ui().canRefresh() || state.ui().busy()));
 

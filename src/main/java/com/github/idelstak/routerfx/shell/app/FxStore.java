@@ -1,8 +1,8 @@
 package com.github.idelstak.routerfx.shell.app;
 
+import java.util.*;
 import javafx.application.*;
 import javafx.beans.property.*;
-import java.util.*;
 
 public final class FxStore {
 

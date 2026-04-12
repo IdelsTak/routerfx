@@ -3,17 +3,19 @@ package com.github.idelstak.routerfx.shell.app;
 import com.github.idelstak.routerfx.router.protocol.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.function.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.stage.*;
-import java.util.concurrent.atomic.*;
-import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.testfx.framework.junit5.*;
 import org.testfx.util.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("ui")
 final class DesktopAppTest extends ApplicationTest {
@@ -36,7 +38,7 @@ final class DesktopAppTest extends ApplicationTest {
     public void start(Stage stage) {
         StateUpdate update = new StateUpdate();
         FlowEffects effect = new FlowEffects(baseUrl -> api());
-        Store store = new Store(AppState.initial(), update, effect, Runnable::run);
+        Store store = new Store(AppState.initial(), update, effect, command -> Thread.ofVirtual().start(command));
         fxStore = new FxStore(store);
         DashboardPane pane = new DashboardPane(fxStore);
         stage.setScene(new Scene(pane.root(), 900, 900));
@@ -83,6 +85,47 @@ final class DesktopAppTest extends ApplicationTest {
     void connectActionShowsAuthenticatedPanel() {
         connect();
         assertThat("Expected connect action to reveal authenticated panel", lookup("#authPanel").query().isVisible(), is(true));
+    }
+
+    @Test
+    void delayedConnectDisablesConnectButtonWhileLoading() {
+        challengeResult = () -> {
+            pauseMillis(350);
+            return new Result.Success<>(new Challenge("tok"));
+        };
+        replaceText("#baseUrlField", "http://router.local");
+        replaceText("#usernameField", "admin");
+        replaceText("#passwordField", "pass");
+        clickOn("#connectButton");
+        WaitForAsyncUtils.sleep(60, TimeUnit.MILLISECONDS);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected connect button to be disabled while login is in-flight", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(true));
+    }
+
+    @Test
+    void delayedConnectReEnablesConnectButtonAfterSuccess() {
+        challengeResult = () -> {
+            pauseMillis(250);
+            return new Result.Success<>(new Challenge("tok"));
+        };
+        replaceText("#baseUrlField", "http://router.local");
+        replaceText("#usernameField", "admin");
+        replaceText("#passwordField", "pass");
+        clickOn("#connectButton");
+        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
+        assertThat("Expected connect button to re-enable after login completes", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(false));
+    }
+
+    @Test
+    void delayedRefreshDisablesRefreshButtonWhileLoading() {
+        commonResult = () -> {
+            pauseMillis(350);
+            return new Result.Success<>(common("4G+", "18:13:29"));
+        };
+        clickOn("#refreshButton");
+        WaitForAsyncUtils.sleep(60, TimeUnit.MILLISECONDS);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected refresh button to be disabled while refresh is in-flight", lookup("#refreshButton").queryAs(Button.class).isDisabled(), is(true));
     }
 
     @Test
@@ -170,7 +213,24 @@ final class DesktopAppTest extends ApplicationTest {
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
         clickOn("#connectButton");
-        WaitForAsyncUtils.waitForFxEvents();
+        waitForCondition(() -> lookup("#authPanel").query().isVisible() || "Failed".equals(lookup("#noteLabel").queryLabeled().getText()));
+    }
+
+    private void waitForCondition(Supplier<Boolean> condition) {
+        try {
+            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, condition::get);
+        } catch (TimeoutException issue) {
+            fail("Condition timed out: " + issue.getMessage());
+        }
+    }
+
+    private void pauseMillis(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException interruptedIssue) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(interruptedIssue);
+        }
     }
 
     private RadioState radio(String operator, String uptime, String flowDl) {
