@@ -1,15 +1,16 @@
-package com.github.idelstak.routerfx.shell.app;
+package com.github.idelstak.routerfx.auth.login;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shell.app.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.util.*;
 
-final class LoginEffect implements Effect {
+public final class LoginEffect implements Effect {
 
     private final RouterApiFactory apiFactory;
 
-    LoginEffect(RouterApiFactory apiFactory) {
+    public LoginEffect(RouterApiFactory apiFactory) {
         this.apiFactory = Objects.requireNonNull(apiFactory, "apiFactory must not be null");
     }
 

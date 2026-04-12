@@ -3,6 +3,7 @@ package com.github.idelstak.routerfx.shell.app;
 import com.github.idelstak.routerfx.router.protocol.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
+import java.util.*;
 import org.junit.jupiter.api.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -11,7 +12,7 @@ final class FlowEffectsTest {
 
     @Test
     void connectRequestedEmitsAuthenticatedWhenBoundaryCallsSucceed() {
-        var effect = new FlowEffects(baseUrl -> okApi());
+        var effect = flowEffects(baseUrl -> okApi());
         var msg = effect.apply(
           AppState.initial(),
           new Msg.ConnectRequested("http://router.local", new Credentials("admin", "päss"))
@@ -21,7 +22,7 @@ final class FlowEffectsTest {
 
     @Test
     void connectRequestedEmitsFailedWhenBoundaryLoginFails() {
-        var effect = new FlowEffects(baseUrl -> authFailApi());
+        var effect = flowEffects(baseUrl -> authFailApi());
         var msg = effect.apply(
           AppState.initial(),
           new Msg.ConnectRequested("http://router.local", new Credentials("admin", "päss"))
@@ -31,17 +32,22 @@ final class FlowEffectsTest {
 
     @Test
     void refreshRequestedEmitsCommonLoadedWhenSessionIsMissing() {
-        var effect = new FlowEffects(baseUrl -> okApi());
+        var effect = flowEffects(baseUrl -> okApi());
         var msg = effect.apply(AppState.initial(), new Msg.RefreshRequested()).orElseThrow();
         assertThat("Expected refresh effect to emit common-loaded when no session exists", msg, instanceOf(Msg.CommonLoaded.class));
     }
 
     @Test
     void refreshRequestedEmitsDashboardLoadedWhenSessionExists() {
-        var effect = new FlowEffects(baseUrl -> okApi());
+        var effect = flowEffects(baseUrl -> okApi());
         var state = new StateUpdate().apply(AppState.initial(), new Msg.Authenticated(new Session("sess-1"), radio()));
         var msg = effect.apply(state, new Msg.RefreshRequested()).orElseThrow();
         assertThat("Expected refresh effect to emit dashboard-loaded message", msg, instanceOf(Msg.DashboardLoaded.class));
+    }
+
+    private FlowEffects flowEffects(RouterApiFactory factory) {
+        Effect noOpPeriodic = (AppState _, Msg _) -> Optional.empty();
+        return new FlowEffects(factory, noOpPeriodic);
     }
 
     private RouterApi okApi() {

@@ -1,6 +1,7 @@
 package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.router.protocol.*;
+import com.github.idelstak.routerfx.shell.cli.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
 import java.io.*;
