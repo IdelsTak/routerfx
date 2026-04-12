@@ -12,6 +12,15 @@ It combines:
 
 The goal is predictable state flow, testable decision logic, and strict object boundaries.
 
+## Document Update Policy
+
+This document is primarily a target architecture guide, not a line-by-line mirror of current code.
+
+- Keep architecture intent sections stable even when implementation is still evolving.
+- Update `Current implementation status` as code changes land.
+- Only change target architecture sections when architecture direction itself changes by explicit decision.
+- Avoid rewriting target-state examples to match temporary implementation shortcuts.
+
 ## Scope
 
 This architecture covers the first product slice:
