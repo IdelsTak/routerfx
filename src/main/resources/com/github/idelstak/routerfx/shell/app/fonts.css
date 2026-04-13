@@ -1,0 +1,167 @@
+@font-face {
+    font-family: "Geist Thin";
+    font-weight: 100;
+    font-style: normal;
+    src: url("fonts/Geist-Thin.ttf");
+}
+
+@font-face {
+    font-family: "Geist ExtraLight";
+    font-weight: 200;
+    font-style: normal;
+    src: url("fonts/Geist-ExtraLight.ttf");
+}
+
+@font-face {
+    font-family: "Geist Light";
+    font-weight: 300;
+    font-style: normal;
+    src: url("fonts/Geist-Light.ttf");
+}
+
+@font-face {
+    font-family: "Geist Regular";
+    font-weight: 400;
+    font-style: normal;
+    src: url("fonts/Geist-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Geist Medium";
+    font-weight: 500;
+    font-style: normal;
+    src: url("fonts/Geist-Medium.ttf");
+}
+
+@font-face {
+    font-family: "Geist SemiBold";
+    font-weight: 600;
+    font-style: normal;
+    src: url("fonts/Geist-SemiBold.ttf");
+}
+
+@font-face {
+    font-family: "Geist Bold";
+    font-weight: 700;
+    font-style: normal;
+    src: url("fonts/Geist-Bold.ttf");
+}
+
+@font-face {
+    font-family: "Geist ExtraBold";
+    font-weight: 800;
+    font-style: normal;
+    src: url("fonts/Geist-ExtraBold.ttf");
+}
+
+@font-face {
+    font-family: "Geist Black";
+    font-weight: 900;
+    font-style: normal;
+    src: url("fonts/Geist-Black.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Thin";
+    font-weight: 100;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-Thin.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Thin Italic";
+    font-weight: 100;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-ThinItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono ExtraLight";
+    font-weight: 200;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-ExtraLight.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono ExtraLight Italic";
+    font-weight: 200;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-ExtraLightItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Light";
+    font-weight: 300;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-Light.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Light Italic";
+    font-weight: 300;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-LightItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Regular";
+    font-weight: 400;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-Regular.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Medium";
+    font-weight: 500;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-Medium.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Medium Italic";
+    font-weight: 500;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-MediumItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono SemiBold";
+    font-weight: 600;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-SemiBold.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono SemiBold Italic";
+    font-weight: 600;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-SemiBoldItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Bold";
+    font-weight: 700;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-Bold.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono Bold Italic";
+    font-weight: 700;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-BoldItalic.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono ExtraBold";
+    font-weight: 800;
+    font-style: normal;
+    src: url("fonts/JetBrainsMono-ExtraBold.ttf");
+}
+
+@font-face {
+    font-family: "JetBrains Mono ExtraBold Italic";
+    font-weight: 800;
+    font-style: italic;
+    src: url("fonts/JetBrainsMono-ExtraBoldItalic.ttf");
+}

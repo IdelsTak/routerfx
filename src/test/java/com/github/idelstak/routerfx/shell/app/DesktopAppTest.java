@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 import javafx.stage.*;
 import org.junit.jupiter.api.*;
 import org.testfx.framework.junit5.*;
@@ -64,6 +63,21 @@ final class DesktopAppTest extends ApplicationTest {
     @Test
     void preLoginUsesDefaultUsername() {
         assertThat("Expected default username in login field", lookup("#usernameField").queryAs(TextField.class).getText(), is("admin"));
+    }
+
+    @Test
+    void shellScrollPaneKeepsHorizontalBarHidden() {
+        assertThat("Expected shell scroll pane to keep horizontal bar policy set to NEVER", lookup(".shell-scroll").queryAs(ScrollPane.class).getHbarPolicy(), is(ScrollPane.ScrollBarPolicy.NEVER));
+    }
+
+    @Test
+    void shellScrollPaneFitsContentWidth() {
+        assertThat("Expected shell scroll pane to fit content width", lookup(".shell-scroll").queryAs(ScrollPane.class).isFitToWidth(), is(true));
+    }
+
+    @Test
+    void shellRootLoadsStylesheetsFromFxml() {
+        assertThat("Expected shell root to load stylesheets directly from FXML", lookup("#shellRoot").queryAs(Parent.class).getStylesheets().size(), is(3));
     }
 
     @Test
@@ -256,18 +270,23 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     private void replaceText(String fieldId, String text) {
-        clickOn(fieldId);
-        press(KeyCode.CONTROL, KeyCode.A);
-        release(KeyCode.A, KeyCode.CONTROL);
-        write(text);
+        TextInputControl field = lookup(fieldId).queryAs(TextInputControl.class);
+        interact(field::clear);
+        interact(() -> field.setText(text));
     }
 
     private void connect() {
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
+        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
         clickOn("#connectButton");
-        waitForCondition(() -> lookup("#authPanel").query().isVisible() || "Authentication failed".equals(lookup("#noteLabel").queryLabeled().getText()));
+        waitForCondition(() -> {
+            String note = lookup("#noteLabel").queryLabeled().getText();
+            return lookup("#authPanel").query().isVisible()
+              || "Authentication failed".equals(note)
+              || "Connected".equals(note);
+        });
     }
 
     private void waitForCondition(Supplier<Boolean> condition) {
