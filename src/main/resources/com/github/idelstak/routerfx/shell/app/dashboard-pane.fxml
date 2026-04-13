@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane id="shellRoot" xmlns="http://javafx.com/javafx/27" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.idelstak.routerfx.shell.app.DashboardView" styleClass="app-shell" stylesheets="@fonts.css,@root-theme.css,@dashboard-theme.css">
+  <center>
+    <ScrollPane styleClass="shell-scroll">
+      <content>
+        <VBox styleClass="shell-content">
+          <children>
+            <HBox styleClass="shell-header">
+              <children>
+                <VBox styleClass="brand-block">
+                  <children>
+                    <Label text="RouterFX" styleClass="brand-title"/>
+                    <Label text="Router dashboard" styleClass="brand-subtitle"/>
+                  </children>
+                </VBox>
+              </children>
+            </HBox>
+
+            <VBox styleClass="card-surface">
+              <children>
+                <Label text="Router access" styleClass="card-title"/>
+                <GridPane styleClass="access-grid">
+                  <children>
+                    <Label text="Router URL" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="baseUrl" id="baseUrlField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Username" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="username" id="usernameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Password" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <PasswordField fx:id="password" id="passwordField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <HBox styleClass="action-row" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                      <children>
+                        <Button fx:id="connect" id="connectButton" text="Connect"/>
+                        <Button fx:id="refresh" id="refreshButton" text="Refresh"/>
+                      </children>
+                    </HBox>
+                  </children>
+                  <columnConstraints>
+                    <ColumnConstraints minWidth="120.0"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                  </columnConstraints>
+                </GridPane>
+                <Label fx:id="noteLabel" id="noteLabel" styleClass="note-label"/>
+              </children>
+            </VBox>
+
+            <VBox styleClass="card-surface">
+              <children>
+                <Label text="Common Dashboard" styleClass="card-title"/>
+                <GridPane fx:id="commonGrid" styleClass="metrics-grid"/>
+              </children>
+            </VBox>
+
+            <VBox fx:id="authenticated" id="authPanel" styleClass="card-surface">
+              <children>
+                <Label text="Authenticated Dashboard" styleClass="card-title"/>
+                <GridPane fx:id="authGrid" styleClass="metrics-grid"/>
+                <Label text="Status Bar" styleClass="card-title"/>
+                <GridPane fx:id="statusGrid" styleClass="metrics-grid"/>
+              </children>
+            </VBox>
+          </children>
+        </VBox>
+      </content>
+    </ScrollPane>
+  </center>
+</BorderPane>

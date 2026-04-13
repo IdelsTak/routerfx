@@ -1,0 +1,125 @@
+.app-shell {
+    -fx-background-color: -fx-shell-bg
+}
+.shell-scroll {
+    -fx-background: -fx-shell-bg;
+    -fx-background-color: -fx-shell-bg;
+    -fx-border-color: -fx-surface-border;
+    -fx-border-width: 1px;
+    -fx-padding: 2px;
+    -fx-hbar-policy: never;
+    -fx-fit-to-width: true
+}
+.shell-scroll > .viewport {
+    -fx-background-color: -fx-shell-bg
+}
+.shell-scroll > .corner {
+    -fx-background-color: -fx-shell-bg
+}
+.shell-scroll .scroll-bar:vertical {
+    -fx-background-color: -fx-shell-bg
+}
+.shell-scroll .scroll-bar:vertical .track {
+    -fx-background-color: #e4e8ec;
+    -fx-background-radius: 8px
+}
+.shell-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #b8c0c8;
+    -fx-background-radius: 8px
+}
+.shell-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #9ca7b1
+}
+.shell-content {
+    -fx-background-color: transparent;
+    -fx-spacing: 12px;
+    -fx-padding: 12px
+}
+.shell-header {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 8px;
+    -fx-alignment: center-left
+}
+.brand-block {
+    -fx-spacing: 2px
+}
+.brand-title {
+    -fx-font-size: 24px;
+    -fx-font-family: 'Geist Bold';
+    -fx-text-fill: -fx-text-primary
+}
+.brand-subtitle {
+    -fx-font-size: 13px;
+    -fx-font-family: 'Geist SemiBold';
+    -fx-text-fill: -fx-text-muted
+}
+.card-surface {
+    -fx-background-color: -fx-surface-bg;
+    -fx-background-radius: 22px;
+    -fx-border-color: -fx-surface-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-padding: 14 16 14 16;
+    -fx-spacing: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(22, 28, 34, 0.08), 14, 0.1, 0, 3)
+}
+.access-grid {
+    -fx-hgap: 8px;
+    -fx-vgap: 8px
+}
+.action-row {
+    -fx-spacing: 8px
+}
+.metrics-grid {
+    -fx-hgap: 8px;
+    -fx-vgap: 6px
+}
+.card-title {
+    -fx-font-size: 12px;
+    -fx-font-family: 'Geist Bold';
+    -fx-text-fill: -fx-text-muted;
+    -fx-letter-spacing: 0.08em
+}
+#connectButton {
+    -fx-background-color: -fx-accent-success;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: -fx-accent-success
+}
+#connectButton:hover {
+    -fx-background-color: #5a8a28;
+    -fx-border-color: #5a8a28
+}
+.metric-label {
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 12px
+}
+.metric-value {
+    -fx-font-size: 13px;
+    -fx-font-family: 'JetBrains Mono SemiBold'
+}
+.metric-value.metric-success {
+    -fx-text-fill: -fx-accent-success
+}
+.metric-value.metric-warning {
+    -fx-text-fill: -fx-accent-warning
+}
+.metric-value.metric-caution {
+    -fx-text-fill: -fx-accent-caution
+}
+.note-label {
+    -fx-background-radius: 999;
+    -fx-font-family: 'Geist Bold';
+    -fx-padding: 4 10 4 10
+}
+.note-label.note-success {
+    -fx-background-color: -fx-accent-success-soft;
+    -fx-text-fill: #305a10
+}
+.note-label.note-warning {
+    -fx-background-color: #f0e5d1;
+    -fx-text-fill: #7a4a00
+}
+.note-label.note-caution {
+    -fx-background-color: #f4dee1;
+    -fx-text-fill: #8d2f3a
+}

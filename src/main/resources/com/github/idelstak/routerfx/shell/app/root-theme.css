@@ -1,0 +1,35 @@
+.root {
+    -fx-shell-bg: #f2f3f5;
+    -fx-surface-bg: #ffffff;
+    -fx-surface-border: #d9dde2;
+    -fx-text-primary: #1f252c;
+    -fx-text-muted: #66727e;
+    -fx-accent-success: #6a9d2f;
+    -fx-accent-success-soft: #dce8cc;
+    -fx-accent-warning: #b67a1f;
+    -fx-accent-caution: #c9767f;
+    -fx-font-family: 'Geist Regular';
+    -fx-font-mono: 'JetBrains Mono Regular'
+}
+.label {
+    -fx-text-fill: -fx-text-primary
+}
+.text-field, .password-field {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10px;
+    -fx-border-color: #ccd2d8;
+    -fx-border-radius: 10px;
+    -fx-padding: 8 10 8 10
+}
+.button {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10px;
+    -fx-border-color: #bac1c8;
+    -fx-border-radius: 10px;
+    -fx-padding: 8 14 8 14;
+    -fx-font-family: 'Geist SemiBold'
+}
+.button:hover {
+    -fx-background-color: -fx-accent-success-soft;
+    -fx-border-color: -fx-accent-success
+}
