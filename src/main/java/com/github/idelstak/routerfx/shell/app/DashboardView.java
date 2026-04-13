@@ -2,8 +2,8 @@ package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.shared.value.*;
 import java.util.*;
-import java.util.regex.*;
 import java.util.function.*;
+import java.util.regex.*;
 import javafx.beans.binding.*;
 import javafx.fxml.*;
 import javafx.scene.*;
@@ -29,6 +29,11 @@ public final class DashboardView {
     private static final String CHIP_TONE_FAIR = "signal-chip-tone-fair";
     private static final String CHIP_TONE_GOOD = "signal-chip-tone-good";
     private static final String CHIP_TONE_EXCELLENT = "signal-chip-tone-excellent";
+    private static final String METRIC_CHIP_TONE_NO_SIGNAL = "metric-chip-tone-nosignal";
+    private static final String METRIC_CHIP_TONE_POOR = "metric-chip-tone-poor";
+    private static final String METRIC_CHIP_TONE_FAIR = "metric-chip-tone-fair";
+    private static final String METRIC_CHIP_TONE_GOOD = "metric-chip-tone-good";
+    private static final String METRIC_CHIP_TONE_EXCELLENT = "metric-chip-tone-excellent";
     private final FxStore fxStore;
     @FXML
     private BorderPane shellRoot;
@@ -78,8 +83,11 @@ public final class DashboardView {
     private Label signalHeroCaption;
     private Arc rsrpGaugeFill;
     private Label rssiValue;
+    private Label rssiQualityChip;
     private Label rsrqValue;
+    private Label rsrqQualityChip;
     private Label sinrValue;
+    private Label sinrQualityChip;
     private Label pciMirrorValue;
     private Label earfcnMirrorValue;
     private Label ipValue;
@@ -135,8 +143,11 @@ public final class DashboardView {
         signalHeroCaption = requiredLabel(signalCard, "signalHeroCaption");
         rsrpGaugeFill = requiredArc(signalCard, "rsrpGaugeFill");
         rssiValue = requiredLabel(signalCard, "rssiValue");
+        rssiQualityChip = requiredLabel(signalCard, "rssiQualityChip");
         rsrqValue = requiredLabel(signalCard, "rsrqValue");
+        rsrqQualityChip = requiredLabel(signalCard, "rsrqQualityChip");
         sinrValue = requiredLabel(signalCard, "sinrValue");
+        sinrQualityChip = requiredLabel(signalCard, "sinrQualityChip");
         pciMirrorValue = requiredLabel(networkPathCard, "pciMirrorValue");
         earfcnMirrorValue = requiredLabel(networkPathCard, "earfcnMirrorValue");
         ipValue = requiredLabel(networkPathCard, "ipValue");
@@ -204,7 +215,13 @@ public final class DashboardView {
         bindStatusBar(statusSimValue, StatusBarState::sim);
         bindStatusBar(statusSmsValue, StatusBarState::smsUnread);
         rsrpValue.textProperty().addListener((_, _, value) -> applyRsrpGauge(value));
+        rssiValue.textProperty().addListener((_, _, value) -> applyRssiQuality(value));
+        sinrValue.textProperty().addListener((_, _, value) -> applySinrQuality(value));
+        rsrqValue.textProperty().addListener((_, _, value) -> applyRsrqQuality(value));
         applyRsrpGauge(rsrpValue.getText());
+        applyRssiQuality(rssiValue.getText());
+        applySinrQuality(sinrValue.getText());
+        applyRsrqQuality(rsrqValue.getText());
     }
 
     private void bindCommon(Label label, Function<CommonDashboard, String> projector) {
@@ -349,27 +366,32 @@ public final class DashboardView {
         parseRsrp(text)
           .ifPresentOrElse(
             value -> {
-                applyRsrpFillLength(value);
-                applyRsrpTone(value);
-                applySignalChipTone(value);
-                applySignalChipText(value);
-                applySignalHeroCaption(value);
-            },
+              applyRsrpFillLength(value);
+              applyRsrpTone(value);
+              applySignalChipTone(value);
+              applySignalChipText(value);
+              applySignalHeroCaption(value);
+          },
             () -> {
-                applyRsrpFillLength(RSRP_MIN);
-                applyRsrpTone(RSRP_MIN);
-                applySignalChipTone(RSRP_MIN);
-                applySignalChipText(RSRP_MIN);
-                applySignalHeroCaption(RSRP_MIN);
-            }
+              applyRsrpFillLength(RSRP_MIN);
+              applyRsrpTone(RSRP_MIN);
+              applySignalChipTone(RSRP_MIN);
+              applySignalChipText(RSRP_MIN);
+              applySignalHeroCaption(RSRP_MIN);
+          }
           );
     }
 
     private Optional<Double> parseRsrp(String text) {
+        return parsePrimaryMetric(text);
+    }
+
+    private Optional<Double> parsePrimaryMetric(String text) {
         if (text == null || text.isBlank()) {
             return Optional.empty();
         }
-        var normalized = text.replace('\u2212', '-');
+        var primary = text.split("/", 2)[0];
+        var normalized = primary.replace('\u2212', '-');
         var matcher = Pattern.compile("-?\\d+(\\.\\d+)?").matcher(normalized);
         if (!matcher.find()) {
             return Optional.empty();
@@ -497,6 +519,90 @@ public final class DashboardView {
         return "Strong, stable, fast speeds";
     }
 
+    private void applyRssiQuality(String text) {
+        var quality = parsePrimaryMetric(text)
+          .map(this::rssiQualityBand)
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
+        applyMetricChipQuality(rssiQualityChip, quality);
+    }
+
+    private void applySinrQuality(String text) {
+        var quality = parsePrimaryMetric(text)
+          .map(this::sinrQualityBand)
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
+        applyMetricChipQuality(sinrQualityChip, quality);
+    }
+
+    private void applyRsrqQuality(String text) {
+        var quality = parsePrimaryMetric(text)
+          .map(this::rsrqQualityBand)
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
+        applyMetricChipQuality(rsrqQualityChip, quality);
+    }
+
+    private void applyMetricChipQuality(Label chip, MetricQuality quality) {
+        if (chip == null) {
+            return;
+        }
+        chip.setText(quality.label());
+        chip.getStyleClass().removeAll(
+          METRIC_CHIP_TONE_NO_SIGNAL,
+          METRIC_CHIP_TONE_POOR,
+          METRIC_CHIP_TONE_FAIR,
+          METRIC_CHIP_TONE_GOOD,
+          METRIC_CHIP_TONE_EXCELLENT
+        );
+        chip.getStyleClass().add(quality.toneClass());
+    }
+
+    private MetricQuality rssiQualityBand(double value) {
+        if (value <= -110d) {
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+        }
+        if (value <= -100d) {
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+        }
+        if (value <= -90d) {
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+        }
+        if (value <= -80d) {
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+        }
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+    }
+
+    private MetricQuality sinrQualityBand(double value) {
+        if (value <= -3d) {
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+        }
+        if (value <= 0d) {
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+        }
+        if (value <= 10d) {
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+        }
+        if (value <= 20d) {
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+        }
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+    }
+
+    private MetricQuality rsrqQualityBand(double value) {
+        if (value <= -20d) {
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+        }
+        if (value <= -15d) {
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+        }
+        if (value <= -10d) {
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+        }
+        if (value <= -5d) {
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+        }
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+    }
+
     private void applyNoteTone(String note) {
         noteLabel.getStyleClass().removeAll(NOTE_SUCCESS, NOTE_WARNING, NOTE_CAUTION);
         if (note == null || note.isBlank()) {
@@ -541,5 +647,9 @@ public final class DashboardView {
           "path-link-fallback"
         );
         node.getStyleClass().add(tone);
+    }
+
+    private record MetricQuality(String label, String toneClass) {
+
     }
 }

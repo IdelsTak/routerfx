@@ -173,6 +173,32 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void supportingSignalQualityChipsFollowDefinedThresholds() {
+        record MetricCase(int rssi, int sinr, int rsrq, String rssiLabel, String rssiTone, String sinrLabel, String sinrTone, String rsrqLabel, String rsrqTone) {
+        }
+        List<MetricCase> cases = List.of(
+          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "No signal", "metric-chip-tone-nosignal", "No signal", "metric-chip-tone-nosignal"),
+          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "Poor", "metric-chip-tone-poor", "Poor", "metric-chip-tone-poor"),
+          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "Fair", "metric-chip-tone-fair", "Fair", "metric-chip-tone-fair"),
+          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "Good", "metric-chip-tone-good", "Good", "metric-chip-tone-good"),
+          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "Excellent", "metric-chip-tone-excellent", "Excellent", "metric-chip-tone-excellent")
+        );
+        List<String> failures = new ArrayList<>();
+        Label rssiChip = lookup("#rssiQualityChip").queryAs(Label.class);
+        Label sinrChip = lookup("#sinrQualityChip").queryAs(Label.class);
+        Label rsrqChip = lookup("#rsrqQualityChip").queryAs(Label.class);
+        for (MetricCase metricCase : cases) {
+            commonResult = () -> new Result.Success<>(commonWithMetrics("4G+", "18:13:29", -77, metricCase.rssi(), metricCase.rsrq(), metricCase.sinr()));
+            clickOn("#refreshButton");
+            WaitForAsyncUtils.waitForFxEvents();
+            checkMetricChip("RSSI", metricCase.rssiLabel(), metricCase.rssiTone(), rssiChip, failures);
+            checkMetricChip("SINR", metricCase.sinrLabel(), metricCase.sinrTone(), sinrChip, failures);
+            checkMetricChip("RSRQ", metricCase.rsrqLabel(), metricCase.rsrqTone(), rsrqChip, failures);
+        }
+        assertTrue(failures.isEmpty(), "Expected supporting metric chip mappings to match thresholds; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
     void connectButtonShowsLoginOverlay() {
         clickOn("#connectButton");
         assertThat("Expected connect button to show login overlay", lookup("#loginOverlay").query().isVisible(), is(true));
@@ -453,6 +479,10 @@ final class DesktopAppTest extends ApplicationTest {
         return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", rsrp + "dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
     }
 
+    private CommonDashboard commonWithMetrics(String networkType, String runningTime, int rsrp, int rssi, int rsrq, int sinr) {
+        return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", rsrp + "dBm/-", rssi + "dBm/-", rsrq + "dB/-", sinr + "dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
+    }
+
     private double expectedRsrpFillLength(int rsrp) {
         double clamped = Math.max(-140d, Math.min(-44d, rsrp));
         double ratio = (clamped + 140d) / 96d;
@@ -568,6 +598,15 @@ final class DesktopAppTest extends ApplicationTest {
 
     private boolean hasTone(Arc arc, String tone) {
         return arc.getStyleClass().contains(tone);
+    }
+
+    private void checkMetricChip(String metric, String expectedText, String expectedTone, Label chip, List<String> failures) {
+        if (!expectedText.equals(chip.getText())) {
+            failures.add(metric + " expected chip text " + expectedText + " but was " + chip.getText());
+        }
+        if (!chip.getStyleClass().contains(expectedTone)) {
+            failures.add(metric + " expected chip tone " + expectedTone + " but had " + chip.getStyleClass());
+        }
     }
 
     private RouterApi api() {

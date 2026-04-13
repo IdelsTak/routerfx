@@ -70,6 +70,13 @@
                   <children>
                     <Label styleClass="metric-block-title" text="RSSI" />
                     <Label styleClass="metric-block-subtitle" text="Total received power" HBox.hgrow="ALWAYS" />
+                              <Region HBox.hgrow="ALWAYS" />
+                    <Label id="rssiQualityChip" fx:id="rssiQualityChip" text="Good">
+                      <styleClass>
+                        <String fx:value="signal-chip" />
+                        <String fx:value="metric-chip-tone-good" />
+                      </styleClass>
+                    </Label>
                     <HBox styleClass="metric-value-wrap">
                       <children>
                         <Label id="rssiValue" fx:id="rssiValue" styleClass="metric-block-value" text="-" />
@@ -83,7 +90,19 @@
                     <Region HBox.hgrow="ALWAYS">
                       <styleClass>
                         <String fx:value="metric-range-seg" />
-                        <String fx:value="metric-range-green" />
+                        <String fx:value="metric-range-red" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-red-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-amber-soft" />
                       </styleClass>
                     </Region>
                     <Region HBox.hgrow="ALWAYS">
@@ -92,18 +111,21 @@
                         <String fx:value="metric-range-green-soft" />
                       </styleClass>
                     </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green" />
+                      </styleClass>
+                    </Region>
                   </children>
                 </HBox>
                 <HBox styleClass="metric-range-labels">
                   <children>
-                    <Label styleClass="range-label" text="-100 weak" />
-                    <Label text="strong ▲">
-                      <styleClass>
-                        <String fx:value="range-label" />
-                        <String fx:value="range-label-active" />
-                      </styleClass>
-                    </Label>
-                    <Label styleClass="range-label" text="-50 max" />
+                    <Label styleClass="range-label" text="≤-110 no signal" />
+                    <Label styleClass="range-label" text="-100 poor" />
+                    <Label styleClass="range-label" text="-90 fair" />
+                    <Label styleClass="range-label" text="-80 good" />
+                    <Label styleClass="range-label" text="-50+ excellent" />
                   </children>
                 </HBox>
               </children>
@@ -117,10 +139,11 @@
                   <children>
                     <Label styleClass="metric-block-title" text="SINR" />
                     <Label styleClass="metric-block-subtitle" text="Signal vs noise &amp; interference" HBox.hgrow="ALWAYS" />
-                    <Label text="Good">
+                              <Region HBox.hgrow="ALWAYS" />
+                    <Label id="sinrQualityChip" fx:id="sinrQualityChip" text="Good">
                       <styleClass>
                         <String fx:value="signal-chip" />
-                        <String fx:value="metric-chip-warning" />
+                        <String fx:value="metric-chip-tone-good" />
                       </styleClass>
                     </Label>
                     <HBox styleClass="metric-value-wrap">
@@ -161,15 +184,11 @@
                 </HBox>
                 <HBox styleClass="metric-range-labels">
                   <children>
-                    <Label styleClass="range-label" text="&lt;0 poor" />
-                    <Label styleClass="range-label" text="0-10 fair" />
-                    <Label text="10-20 good ▲">
-                      <styleClass>
-                        <String fx:value="range-label" />
-                        <String fx:value="range-label-active" />
-                      </styleClass>
-                    </Label>
-                    <Label styleClass="range-label" text="&gt;20 best" />
+                    <Label styleClass="range-label" text="≤-3 no signal" />
+                    <Label styleClass="range-label" text="-3..0 poor" />
+                    <Label styleClass="range-label" text="0..10 fair" />
+                    <Label styleClass="range-label" text="10..20 good" />
+                    <Label styleClass="range-label" text="&gt;20 excellent" />
                   </children>
                 </HBox>
               </children>
@@ -183,10 +202,11 @@
                   <children>
                     <Label styleClass="metric-block-title" text="RSRQ" />
                     <Label styleClass="metric-block-subtitle" text="Channel congestion" HBox.hgrow="ALWAYS" />
-                    <Label text="Fair">
+                              <Region HBox.hgrow="ALWAYS" />
+                    <Label id="rsrqQualityChip" fx:id="rsrqQualityChip" text="Fair">
                       <styleClass>
                         <String fx:value="signal-chip" />
-                        <String fx:value="metric-chip-warning" />
+                        <String fx:value="metric-chip-tone-fair" />
                       </styleClass>
                     </Label>
                     <HBox styleClass="metric-value-wrap">
@@ -233,15 +253,11 @@
                 </HBox>
                 <HBox styleClass="metric-range-labels">
                   <children>
-                    <Label styleClass="range-label" text="-20 bad" />
-                    <Label text="-10 fair ▲">
-                      <styleClass>
-                        <String fx:value="range-label" />
-                        <String fx:value="range-label-active" />
-                      </styleClass>
-                    </Label>
-                    <Label styleClass="range-label" text="-5 good" />
-                    <Label styleClass="range-label" text="-3 best" />
+                    <Label styleClass="range-label" text="≤-20 no signal" />
+                    <Label styleClass="range-label" text="-20..-15 poor" />
+                    <Label styleClass="range-label" text="-15..-10 fair" />
+                    <Label styleClass="range-label" text="-10..-5 good" />
+                    <Label styleClass="range-label" text="&gt;-5 excellent" />
                   </children>
                 </HBox>
               </children>
