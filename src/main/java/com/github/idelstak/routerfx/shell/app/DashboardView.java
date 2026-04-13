@@ -34,6 +34,11 @@ public final class DashboardView {
     private static final String METRIC_CHIP_TONE_FAIR = "metric-chip-tone-fair";
     private static final String METRIC_CHIP_TONE_GOOD = "metric-chip-tone-good";
     private static final String METRIC_CHIP_TONE_EXCELLENT = "metric-chip-tone-excellent";
+    private static final String METRIC_RANGE_TONE_NO_SIGNAL = "metric-range-fill-nosignal";
+    private static final String METRIC_RANGE_TONE_POOR = "metric-range-fill-poor";
+    private static final String METRIC_RANGE_TONE_FAIR = "metric-range-fill-fair";
+    private static final String METRIC_RANGE_TONE_GOOD = "metric-range-fill-good";
+    private static final String METRIC_RANGE_TONE_EXCELLENT = "metric-range-fill-excellent";
     private final FxStore fxStore;
     @FXML
     private BorderPane shellRoot;
@@ -84,10 +89,16 @@ public final class DashboardView {
     private Arc rsrpGaugeFill;
     private Label rssiValue;
     private Label rssiQualityChip;
+    private AnchorPane rssiRangeTrack;
+    private Region rssiRangeFill;
     private Label rsrqValue;
     private Label rsrqQualityChip;
+    private AnchorPane rsrqRangeTrack;
+    private Region rsrqRangeFill;
     private Label sinrValue;
     private Label sinrQualityChip;
+    private AnchorPane sinrRangeTrack;
+    private Region sinrRangeFill;
     private Label pciMirrorValue;
     private Label earfcnMirrorValue;
     private Label ipValue;
@@ -144,10 +155,16 @@ public final class DashboardView {
         rsrpGaugeFill = requiredArc(signalCard, "rsrpGaugeFill");
         rssiValue = requiredLabel(signalCard, "rssiValue");
         rssiQualityChip = requiredLabel(signalCard, "rssiQualityChip");
+        rssiRangeTrack = requiredAnchorPane(signalCard, "rssiRangeTrack");
+        rssiRangeFill = requiredRegion(signalCard, "rssiRangeFill");
         rsrqValue = requiredLabel(signalCard, "rsrqValue");
         rsrqQualityChip = requiredLabel(signalCard, "rsrqQualityChip");
+        rsrqRangeTrack = requiredAnchorPane(signalCard, "rsrqRangeTrack");
+        rsrqRangeFill = requiredRegion(signalCard, "rsrqRangeFill");
         sinrValue = requiredLabel(signalCard, "sinrValue");
         sinrQualityChip = requiredLabel(signalCard, "sinrQualityChip");
+        sinrRangeTrack = requiredAnchorPane(signalCard, "sinrRangeTrack");
+        sinrRangeFill = requiredRegion(signalCard, "sinrRangeFill");
         pciMirrorValue = requiredLabel(networkPathCard, "pciMirrorValue");
         earfcnMirrorValue = requiredLabel(networkPathCard, "earfcnMirrorValue");
         ipValue = requiredLabel(networkPathCard, "ipValue");
@@ -222,6 +239,9 @@ public final class DashboardView {
         applyRssiQuality(rssiValue.getText());
         applySinrQuality(sinrValue.getText());
         applyRsrqQuality(rsrqValue.getText());
+        rssiRangeTrack.widthProperty().addListener((_, _, __) -> applyRssiQuality(rssiValue.getText()));
+        sinrRangeTrack.widthProperty().addListener((_, _, __) -> applySinrQuality(sinrValue.getText()));
+        rsrqRangeTrack.widthProperty().addListener((_, _, __) -> applyRsrqQuality(rsrqValue.getText()));
     }
 
     private void bindCommon(Label label, Function<CommonDashboard, String> projector) {
@@ -317,6 +337,20 @@ public final class DashboardView {
           .filter(HBox.class::isInstance)
           .map(HBox.class::cast)
           .orElseThrow(() -> new IllegalStateException("Missing hbox: " + id));
+    }
+
+    private AnchorPane requiredAnchorPane(Parent root, String id) {
+        return findById(root, id)
+          .filter(AnchorPane.class::isInstance)
+          .map(AnchorPane.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing anchor pane: " + id));
+    }
+
+    private Region requiredRegion(Parent root, String id) {
+        return findById(root, id)
+          .filter(Region.class::isInstance)
+          .map(Region.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing region: " + id));
     }
 
     private Optional<Node> findById(Node node, String id) {
@@ -522,22 +556,27 @@ public final class DashboardView {
     private void applyRssiQuality(String text) {
         var quality = parsePrimaryMetric(text)
           .map(this::rssiQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
-        applyMetricChipQuality(rssiQualityChip, quality);
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
+        applyMetricVisuals(rssiQualityChip, quality, rssiRangeFill, rssiRangeTrack);
     }
 
     private void applySinrQuality(String text) {
         var quality = parsePrimaryMetric(text)
           .map(this::sinrQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
-        applyMetricChipQuality(sinrQualityChip, quality);
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
+        applyMetricVisuals(sinrQualityChip, quality, sinrRangeFill, sinrRangeTrack);
     }
 
     private void applyRsrqQuality(String text) {
         var quality = parsePrimaryMetric(text)
           .map(this::rsrqQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL));
-        applyMetricChipQuality(rsrqQualityChip, quality);
+          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
+        applyMetricVisuals(rsrqQualityChip, quality, rsrqRangeFill, rsrqRangeTrack);
+    }
+
+    private void applyMetricVisuals(Label chip, MetricQuality quality, Region rangeFill, AnchorPane rangeTrack) {
+        applyMetricChipQuality(chip, quality);
+        applyMetricRangeQuality(rangeFill, rangeTrack, quality);
     }
 
     private void applyMetricChipQuality(Label chip, MetricQuality quality) {
@@ -552,55 +591,90 @@ public final class DashboardView {
           METRIC_CHIP_TONE_GOOD,
           METRIC_CHIP_TONE_EXCELLENT
         );
-        chip.getStyleClass().add(quality.toneClass());
+        chip.getStyleClass().add(quality.chipToneClass());
+    }
+
+    private void applyMetricRangeQuality(Region rangeFill, AnchorPane rangeTrack, MetricQuality quality) {
+        if (rangeFill == null || rangeTrack == null) {
+            return;
+        }
+        rangeFill.getStyleClass().removeAll(
+          METRIC_RANGE_TONE_NO_SIGNAL,
+          METRIC_RANGE_TONE_POOR,
+          METRIC_RANGE_TONE_FAIR,
+          METRIC_RANGE_TONE_GOOD,
+          METRIC_RANGE_TONE_EXCELLENT
+        );
+        rangeFill.getStyleClass().add(quality.rangeToneClass());
+        var trackWidth = rangeTrack.getWidth();
+        var trackHeight = rangeTrack.getHeight();
+        if (trackWidth <= 0d || trackHeight <= 0d) {
+            return;
+        }
+        var fillWidth = trackWidth * quality.ratio();
+        rangeFill.setMinSize(fillWidth, trackHeight);
+        rangeFill.setPrefSize(fillWidth, trackHeight);
+        rangeFill.setMaxSize(fillWidth, trackHeight);
     }
 
     private MetricQuality rssiQualityBand(double value) {
+        var ratio = normalizedRatio(value, -110d, -50d);
         if (value <= -110d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
         }
         if (value <= -100d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
         }
         if (value <= -90d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
         }
         if (value <= -80d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
         }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
     }
 
     private MetricQuality sinrQualityBand(double value) {
+        var ratio = normalizedRatio(value, -3d, 20d);
         if (value <= -3d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
         }
         if (value <= 0d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
         }
         if (value <= 10d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
         }
         if (value <= 20d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
         }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
     }
 
     private MetricQuality rsrqQualityBand(double value) {
+        var ratio = normalizedRatio(value, -20d, -5d);
         if (value <= -20d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL);
+            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
         }
         if (value <= -15d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR);
+            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
         }
         if (value <= -10d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR);
+            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
         }
         if (value <= -5d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD);
+            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
         }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT);
+        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
+    }
+
+    private double normalizedRatio(double value, double min, double max) {
+        if (max <= min) {
+            return 0d;
+        }
+        var clamped = Math.max(min, Math.min(max, value));
+        var ratio = (clamped - min) / (max - min);
+        return Math.max(0d, Math.min(1d, ratio));
     }
 
     private void applyNoteTone(String note) {
@@ -649,7 +723,7 @@ public final class DashboardView {
         node.getStyleClass().add(tone);
     }
 
-    private record MetricQuality(String label, String toneClass) {
+    private record MetricQuality(String label, String chipToneClass, String rangeToneClass, double ratio) {
 
     }
 }

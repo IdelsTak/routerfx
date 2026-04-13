@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
@@ -174,19 +175,28 @@ final class DesktopAppTest extends ApplicationTest {
 
     @Test
     void supportingSignalQualityChipsFollowDefinedThresholds() {
-        record MetricCase(int rssi, int sinr, int rsrq, String rssiLabel, String rssiTone, String sinrLabel, String sinrTone, String rsrqLabel, String rsrqTone) {
+        record MetricCase(int rssi, int sinr, int rsrq,
+                          String rssiLabel, String rssiTone, String rssiRangeTone,
+                          String sinrLabel, String sinrTone, String sinrRangeTone,
+                          String rsrqLabel, String rsrqTone, String rsrqRangeTone) {
         }
         List<MetricCase> cases = List.of(
-          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "No signal", "metric-chip-tone-nosignal", "No signal", "metric-chip-tone-nosignal"),
-          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "Poor", "metric-chip-tone-poor", "Poor", "metric-chip-tone-poor"),
-          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "Fair", "metric-chip-tone-fair", "Fair", "metric-chip-tone-fair"),
-          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "Good", "metric-chip-tone-good", "Good", "metric-chip-tone-good"),
-          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "Excellent", "metric-chip-tone-excellent", "Excellent", "metric-chip-tone-excellent")
+          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal"),
+          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "Poor", "metric-chip-tone-poor", "metric-range-fill-poor"),
+          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Fair", "metric-chip-tone-fair", "metric-range-fill-fair"),
+          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "metric-range-fill-good", "Good", "metric-chip-tone-good", "metric-range-fill-good", "Good", "metric-chip-tone-good", "metric-range-fill-good"),
+          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent")
         );
         List<String> failures = new ArrayList<>();
         Label rssiChip = lookup("#rssiQualityChip").queryAs(Label.class);
         Label sinrChip = lookup("#sinrQualityChip").queryAs(Label.class);
         Label rsrqChip = lookup("#rsrqQualityChip").queryAs(Label.class);
+        AnchorPane rssiRangeTrack = lookup("#rssiRangeTrack").queryAs(AnchorPane.class);
+        Region rssiRangeFill = lookup("#rssiRangeFill").queryAs(Region.class);
+        AnchorPane sinrRangeTrack = lookup("#sinrRangeTrack").queryAs(AnchorPane.class);
+        Region sinrRangeFill = lookup("#sinrRangeFill").queryAs(Region.class);
+        AnchorPane rsrqRangeTrack = lookup("#rsrqRangeTrack").queryAs(AnchorPane.class);
+        Region rsrqRangeFill = lookup("#rsrqRangeFill").queryAs(Region.class);
         for (MetricCase metricCase : cases) {
             commonResult = () -> new Result.Success<>(commonWithMetrics("4G+", "18:13:29", -77, metricCase.rssi(), metricCase.rsrq(), metricCase.sinr()));
             clickOn("#refreshButton");
@@ -194,6 +204,12 @@ final class DesktopAppTest extends ApplicationTest {
             checkMetricChip("RSSI", metricCase.rssiLabel(), metricCase.rssiTone(), rssiChip, failures);
             checkMetricChip("SINR", metricCase.sinrLabel(), metricCase.sinrTone(), sinrChip, failures);
             checkMetricChip("RSRQ", metricCase.rsrqLabel(), metricCase.rsrqTone(), rsrqChip, failures);
+            checkMetricRangeFill("RSSI", metricCase.rssiRangeTone(), rssiRangeFill, failures);
+            checkMetricRangeFill("SINR", metricCase.sinrRangeTone(), sinrRangeFill, failures);
+            checkMetricRangeFill("RSRQ", metricCase.rsrqRangeTone(), rsrqRangeFill, failures);
+            checkMetricRangeGeometry("RSSI", normalizedRatio(metricCase.rssi(), -110d, -50d), rssiRangeTrack, rssiRangeFill, failures);
+            checkMetricRangeGeometry("SINR", normalizedRatio(metricCase.sinr(), -3d, 20d), sinrRangeTrack, sinrRangeFill, failures);
+            checkMetricRangeGeometry("RSRQ", normalizedRatio(metricCase.rsrq(), -20d, -5d), rsrqRangeTrack, rsrqRangeFill, failures);
         }
         assertTrue(failures.isEmpty(), "Expected supporting metric chip mappings to match thresholds; mismatches: " + String.join(", ", failures));
     }
@@ -607,6 +623,42 @@ final class DesktopAppTest extends ApplicationTest {
         if (!chip.getStyleClass().contains(expectedTone)) {
             failures.add(metric + " expected chip tone " + expectedTone + " but had " + chip.getStyleClass());
         }
+    }
+
+    private void checkMetricRangeFill(String metric, String expectedTone, Region fill, List<String> failures) {
+        if (!fill.getStyleClass().contains(expectedTone)) {
+            failures.add(metric + " expected range fill tone " + expectedTone + " but had " + fill.getStyleClass());
+        }
+    }
+
+    private void checkMetricRangeGeometry(String metric, double expectedRatio, AnchorPane track, Region fill, List<String> failures) {
+        var trackBounds = track.getBoundsInLocal();
+        var fillBounds = fill.getBoundsInParent();
+        var trackWidth = trackBounds.getWidth();
+        var trackHeight = trackBounds.getHeight();
+        var fillWidth = fillBounds.getWidth();
+        var fillHeight = fillBounds.getHeight();
+
+        if (trackWidth <= 0d || trackHeight <= 0d) {
+            failures.add(metric + " expected positive track dimensions but got width=" + trackWidth + ", height=" + trackHeight);
+            return;
+        }
+
+        var expectedWidth = trackWidth * expectedRatio;
+        if (Math.abs(fillWidth - expectedWidth) > 2d) {
+            failures.add(metric + " expected fill width " + expectedWidth + " but was " + fillWidth);
+        }
+        if (Math.abs(fillHeight - trackHeight) > 1d) {
+            failures.add(metric + " expected fill height " + trackHeight + " but was " + fillHeight);
+        }
+        if (expectedRatio < 0.99d && fillWidth >= trackWidth - 1d) {
+            failures.add(metric + " expected partial fill below full track width but got fill=" + fillWidth + " track=" + trackWidth);
+        }
+    }
+
+    private double normalizedRatio(double value, double min, double max) {
+        var clamped = Math.max(min, Math.min(max, value));
+        return (clamped - min) / (max - min);
     }
 
     private RouterApi api() {

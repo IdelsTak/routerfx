@@ -230,6 +230,7 @@
 .signal-hero {
     -fx-alignment: center;
     -fx-min-width: 330px;
+    -fx-max-width: 330px;
     -fx-spacing: 10px;
     -fx-padding: 0 16 32 0
 }
@@ -366,8 +367,7 @@
     -fx-background-color: -fx-surface-border;
     -fx-min-width: 0.5px;
     -fx-pref-width: 0.5px;
-    -fx-max-width: 0.5px;
-    -fx-min-height: 320px
+    -fx-max-width: 0.5px
 }
 .signal-gauge-scale {
     -fx-min-width: 260px;
@@ -376,7 +376,7 @@
     -fx-translate-y: -43px
 }
 .signal-metrics {
-    -fx-spacing: 14px;
+    -fx-spacing: 18px;
     -fx-fill-width: true
 }
 .metric-block {
@@ -438,9 +438,36 @@
     -fx-spacing: 2px;
     -fx-alignment: center-left
 }
-.metric-range-seg {
+.metric-range-track {
     -fx-pref-height: 6px;
+    -fx-min-height: 6px;
+    -fx-max-height: 6px
+}
+.metric-range-track-base {
+    -fx-background-color: #d9d9d4;
     -fx-background-radius: 99px
+}
+.metric-range-fill {
+    -fx-pref-height: 6px;
+    -fx-min-height: 6px;
+    -fx-max-height: 6px;
+    -fx-max-width: -1;
+    -fx-background-radius: 99px
+}
+.metric-range-fill-nosignal {
+    -fx-background-color: #e24b4a
+}
+.metric-range-fill-poor {
+    -fx-background-color: #f09595
+}
+.metric-range-fill-fair {
+    -fx-background-color: #ef9f27
+}
+.metric-range-fill-good {
+    -fx-background-color: #c0dd97
+}
+.metric-range-fill-excellent {
+    -fx-background-color: #639922
 }
 .metric-range-green {
     -fx-background-color: -fx-accent-success
