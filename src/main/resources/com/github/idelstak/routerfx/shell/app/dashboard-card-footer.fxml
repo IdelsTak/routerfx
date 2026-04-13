@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox id="footerStatsCard" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+  <styleClass>
+    <String fx:value="card-surface" />
+    <String fx:value="footer-stats-card" />
+  </styleClass>
+  <children>
+    <Label styleClass="card-title" text="SYSTEM INFORMATION" />
+    <GridPane styleClass="footer-grid">
+      <children>
+        <Label styleClass="metric-icon" text="UP" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label styleClass="metric-label" text="RUNNING TIME" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label id="runningTimeValue" fx:id="runningTimeValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+        <Label styleClass="metric-icon" text="FW" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label styleClass="metric-label" text="FIRMWARE VERSION" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label id="firmwareVersionValue" fx:id="firmwareVersionValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+        <Label styleClass="metric-icon" text="ANT" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label styleClass="metric-label" text="ANTENNA STATUS" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label id="antennaStatusValue" fx:id="antennaStatusValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+      </children>
+    </GridPane>
+  </children>
+</VBox>

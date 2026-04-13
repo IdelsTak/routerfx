@@ -2,18 +2,44 @@ package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.shared.value.*;
 import java.util.*;
+import java.util.regex.*;
 import java.util.function.*;
 import javafx.beans.binding.*;
 import javafx.fxml.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.shape.*;
 
 public final class DashboardView {
 
     private static final String NOTE_SUCCESS = "note-success";
     private static final String NOTE_WARNING = "note-warning";
     private static final String NOTE_CAUTION = "note-caution";
+    private static final double RSRP_MIN = -140d;
+    private static final double RSRP_MAX = -44d;
+    private static final double RSRP_SWEEP = 180d;
+    private static final String RSRP_TONE_NO_SIGNAL = "signal-gauge-tone-nosignal";
+    private static final String RSRP_TONE_POOR = "signal-gauge-tone-poor";
+    private static final String RSRP_TONE_FAIR = "signal-gauge-tone-fair";
+    private static final String RSRP_TONE_GOOD = "signal-gauge-tone-good";
+    private static final String RSRP_TONE_EXCELLENT = "signal-gauge-tone-excellent";
+    private static final String CHIP_TONE_NO_SIGNAL = "signal-chip-tone-nosignal";
+    private static final String CHIP_TONE_POOR = "signal-chip-tone-poor";
+    private static final String CHIP_TONE_FAIR = "signal-chip-tone-fair";
+    private static final String CHIP_TONE_GOOD = "signal-chip-tone-good";
+    private static final String CHIP_TONE_EXCELLENT = "signal-chip-tone-excellent";
     private final FxStore fxStore;
+    @FXML
+    private BorderPane shellRoot;
+    @FXML
+    private VBox topStatusCard;
+    @FXML
+    private VBox signalCard;
+    @FXML
+    private VBox networkPathCard;
+    @FXML
+    private VBox footerStatsCard;
     @FXML
     private TextField baseUrl;
     @FXML
@@ -25,15 +51,65 @@ public final class DashboardView {
     @FXML
     private Button refresh;
     @FXML
+    private Button loginSubmit;
+    @FXML
+    private Button loginCancel;
+    @FXML
     private Label noteLabel;
     @FXML
+    private VBox loginOverlay;
+    @FXML
     private VBox authenticated;
+    private Label routerPathNode;
+    private Label internetPathNode;
+    private Label primaryDnsPathNode;
+    private Label secondaryDnsPathNode;
+    private Label primaryDnsLink;
+    private Label secondaryDnsLink;
+    private Label networkTypeValue;
+    private Label simValue;
+    private Label atValue;
+    private Label wifi24Value;
+    private Label wifi5Value;
+    private Label lanValue;
+    private Label rsrpValue;
+    private HBox signalChip;
+    private Label signalChipText;
+    private Label signalHeroCaption;
+    private Arc rsrpGaugeFill;
+    private Label rssiValue;
+    private Label rsrqValue;
+    private Label sinrValue;
+    private Label pciMirrorValue;
+    private Label earfcnMirrorValue;
+    private Label ipValue;
+    private Label wanMacValue;
+    private Label primaryDnsValue;
+    private Label secondaryDnsValue;
+    private Label ipv6Value;
+    private Label primaryIpv6DnsValue;
+    private Label secondaryIpv6DnsValue;
+    private Label runningTimeValue;
+    private Label firmwareVersionValue;
+    private Label antennaStatusValue;
     @FXML
-    private GridPane commonGrid;
+    private Label operatorValue;
     @FXML
-    private GridPane authGrid;
+    private Label currentBandValue;
     @FXML
-    private GridPane statusGrid;
+    private Label bandwidthValue;
+    @FXML
+    private Label uptimeValue;
+    @FXML
+    private Label currentFlowValue;
+    @FXML
+    private Label statusSignalValue;
+    @FXML
+    private Label statusNetworkTypeValue;
+    @FXML
+    private Label statusSimValue;
+    @FXML
+    private Label statusSmsValue;
 
     public DashboardView(FxStore fxStore) {
         this.fxStore = Objects.requireNonNull(fxStore, "fxStore must not be null");
@@ -41,88 +117,133 @@ public final class DashboardView {
 
     @FXML
     protected void initialize() {
-        rows();
+        resolveIncludedNodes();
+        bindValues();
         wire();
     }
 
-    private void rows() {
-        row(commonGrid, 0, "Network Type", value("networkTypeValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::networkType)));
-        row(commonGrid, 1, "SIM", value("simValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::sim)));
-        row(commonGrid, 2, "AT", value("atValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::at)));
-        row(commonGrid, 3, "2.4 GHz Wi-Fi", value("wifi24Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wifi24)));
-        row(commonGrid, 4, "5 GHz Wi-Fi", value("wifi5Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wifi5)));
-        row(commonGrid, 5, "LAN", value("lanValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::lan)));
-        row(commonGrid, 6, "RSRP", value("rsrpValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rsrp), "metric-caution"));
-        row(commonGrid, 7, "RSSI", value("rssiValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rssi), "metric-caution"));
-        row(commonGrid, 8, "RSRQ", value("rsrqValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rsrq), "metric-warning"));
-        row(commonGrid, 9, "SINR", value("sinrValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::sinr), "metric-warning"));
-        row(commonGrid, 10, "PCI", value("pciValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::pci)));
-        row(commonGrid, 11, "EARFCN", value("earfcnValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::earfcn)));
-        row(commonGrid, 12, "IP", value("ipValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::ip)));
-        row(commonGrid, 13, "WAN MAC", value("wanMacValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wanMac)));
-        row(commonGrid, 14, "Primary DNS", value("primaryDnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::primaryDns)));
-        row(commonGrid, 15, "Secondary DNS", value("secondaryDnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::secondaryDns)));
-        row(commonGrid, 16, "IPv6", value("ipv6Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::ipv6)));
-        row(commonGrid, 17, "Primary IPv6 DNS", value("primaryIpv6DnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::primaryIpv6Dns)));
-        row(commonGrid, 18, "Secondary IPv6 DNS", value("secondaryIpv6DnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::secondaryIpv6Dns)));
-        row(commonGrid, 19, "Running Time", value("runningTimeValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::runningTime)));
-        row(commonGrid, 20, "Firmware Version", value("firmwareVersionValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::firmwareVersion)));
-        row(commonGrid, 21, "Antenna Status", value("antennaStatusValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::antennaStatus)));
+    private void resolveIncludedNodes() {
+        networkTypeValue = requiredLabel(topStatusCard, "networkTypeValue");
+        simValue = requiredLabel(topStatusCard, "simValue");
+        atValue = requiredLabel(topStatusCard, "atValue");
+        wifi24Value = requiredLabel(topStatusCard, "wifi24Value");
+        wifi5Value = requiredLabel(topStatusCard, "wifi5Value");
+        lanValue = requiredLabel(topStatusCard, "lanValue");
+        rsrpValue = requiredLabel(signalCard, "rsrpValue");
+        signalChip = requiredHBox(signalCard, "signalChip");
+        signalChipText = requiredLabel(signalCard, "signalChipText");
+        signalHeroCaption = requiredLabel(signalCard, "signalHeroCaption");
+        rsrpGaugeFill = requiredArc(signalCard, "rsrpGaugeFill");
+        rssiValue = requiredLabel(signalCard, "rssiValue");
+        rsrqValue = requiredLabel(signalCard, "rsrqValue");
+        sinrValue = requiredLabel(signalCard, "sinrValue");
+        pciMirrorValue = requiredLabel(networkPathCard, "pciMirrorValue");
+        earfcnMirrorValue = requiredLabel(networkPathCard, "earfcnMirrorValue");
+        ipValue = requiredLabel(networkPathCard, "ipValue");
+        wanMacValue = requiredLabel(networkPathCard, "wanMacValue");
+        primaryDnsValue = requiredLabel(networkPathCard, "primaryDnsValue");
+        secondaryDnsValue = requiredLabel(networkPathCard, "secondaryDnsValue");
+        ipv6Value = requiredLabel(networkPathCard, "ipv6Value");
+        primaryIpv6DnsValue = requiredLabel(networkPathCard, "primaryIpv6DnsValue");
+        secondaryIpv6DnsValue = requiredLabel(networkPathCard, "secondaryIpv6DnsValue");
+        runningTimeValue = requiredLabel(footerStatsCard, "runningTimeValue");
+        firmwareVersionValue = requiredLabel(footerStatsCard, "firmwareVersionValue");
+        antennaStatusValue = requiredLabel(footerStatsCard, "antennaStatusValue");
+        operatorValue = requiredLabel(authenticated, "operatorValue");
+        currentBandValue = requiredLabel(authenticated, "currentBandValue");
+        bandwidthValue = requiredLabel(authenticated, "bandwidthValue");
+        uptimeValue = requiredLabel(authenticated, "uptimeValue");
+        currentFlowValue = requiredLabel(authenticated, "currentFlowValue");
+        statusSignalValue = requiredLabel(authenticated, "statusSignalValue");
+        statusNetworkTypeValue = requiredLabel(authenticated, "statusNetworkTypeValue");
+        statusSimValue = requiredLabel(authenticated, "statusSimValue");
+        statusSmsValue = requiredLabel(authenticated, "statusSmsValue");
+        routerPathNode = requiredLabel(networkPathCard, "routerPathNode");
+        internetPathNode = requiredLabel(networkPathCard, "internetPathNode");
+        primaryDnsPathNode = requiredLabel(networkPathCard, "primaryDnsPathNode");
+        secondaryDnsPathNode = requiredLabel(networkPathCard, "secondaryDnsPathNode");
+        primaryDnsLink = requiredLabel(networkPathCard, "primaryDnsLink");
+        secondaryDnsLink = requiredLabel(networkPathCard, "secondaryDnsLink");
+    }
 
-        row(authGrid, 0, "Operator", value("operatorValue", state ->
-          radioValue(state, RadioState::networkOperator)));
-        row(authGrid, 1, "Current Band", value("currentBandValue", state ->
-          radioValue(state, RadioState::currentBand)));
-        row(authGrid, 2, "Bandwidth", value("bandwidthValue", state ->
-          radioValue(state, RadioState::bandwidth)));
-        row(authGrid, 3, "Uptime", value("uptimeValue", state ->
-          radioValue(state, RadioState::onlineDuration)));
-        row(authGrid, 4, "Current Traffic", value("currentFlowValue", state ->
-          radioValue(state, item -> item.flowDl() + "/" + item.flowUl())));
+    private void bindValues() {
+        bindCommon(networkTypeValue, CommonDashboard::networkType);
+        bindCommon(simValue, CommonDashboard::sim);
+        bindCommon(atValue, CommonDashboard::at);
+        bindCommon(wifi24Value, CommonDashboard::wifi24);
+        bindCommon(wifi5Value, CommonDashboard::wifi5);
+        bindCommon(lanValue, CommonDashboard::lan);
 
-        row(statusGrid, 0, "Signal Level", value("statusSignalValue", state ->
-          statusBarValue(state, StatusBarState::signalLevel), "metric-success"));
-        row(statusGrid, 1, "Network Type", value("statusNetworkTypeValue", state ->
-          statusBarValue(state, StatusBarState::networkType)));
-        row(statusGrid, 2, "SIM", value("statusSimValue", state ->
-          statusBarValue(state, StatusBarState::sim)));
-        row(statusGrid, 3, "SMS Unread", value("statusSmsValue", state ->
-          statusBarValue(state, StatusBarState::smsUnread)));
+        bindCommonMetricValue(rsrpValue, CommonDashboard::rsrp);
+        bindCommonMetricValue(rssiValue, CommonDashboard::rssi);
+        bindCommonMetricValue(rsrqValue, CommonDashboard::rsrq);
+        bindCommonMetricValue(sinrValue, CommonDashboard::sinr);
+        bindCommon(pciMirrorValue, CommonDashboard::pci);
+        bindCommon(earfcnMirrorValue, CommonDashboard::earfcn);
+
+        bindCommon(ipValue, CommonDashboard::ip);
+        bindCommon(wanMacValue, CommonDashboard::wanMac);
+        bindCommon(primaryDnsValue, CommonDashboard::primaryDns);
+        bindCommon(secondaryDnsValue, CommonDashboard::secondaryDns);
+        bindCommon(ipv6Value, CommonDashboard::ipv6);
+        bindCommon(primaryIpv6DnsValue, CommonDashboard::primaryIpv6Dns);
+        bindCommon(secondaryIpv6DnsValue, CommonDashboard::secondaryIpv6Dns);
+
+        bindCommon(runningTimeValue, CommonDashboard::runningTime);
+        bindCommon(firmwareVersionValue, CommonDashboard::firmwareVersion);
+        bindCommon(antennaStatusValue, CommonDashboard::antennaStatus);
+
+        bindRadio(operatorValue, RadioState::networkOperator);
+        bindRadio(currentBandValue, RadioState::currentBand);
+        bindRadio(bandwidthValue, RadioState::bandwidth);
+        bindRadio(uptimeValue, RadioState::onlineDuration);
+        bindRadio(currentFlowValue, item -> item.flowDl() + "/" + item.flowUl());
+
+        bindStatusBar(statusSignalValue, StatusBarState::signalLevel);
+        bindStatusBar(statusNetworkTypeValue, StatusBarState::networkType);
+        bindStatusBar(statusSimValue, StatusBarState::sim);
+        bindStatusBar(statusSmsValue, StatusBarState::smsUnread);
+        rsrpValue.textProperty().addListener((_, _, value) -> applyRsrpGauge(value));
+        applyRsrpGauge(rsrpValue.getText());
+    }
+
+    private void bindCommon(Label label, Function<CommonDashboard, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().common().map(projector).orElse("-")));
+    }
+
+    private void bindCommonMetricValue(Label label, Function<CommonDashboard, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().common().map(projector).map(this::formatDualMetricValue).orElse("-/-")));
+    }
+
+    private void bindRadio(Label label, Function<RadioState, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().radio().map(projector).orElse("-")));
+    }
+
+    private void bindStatusBar(Label label, Function<StatusBarState, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().statusBar().map(projector).orElse("-")));
     }
 
     private void wire() {
         noteLabel.textProperty().bind(stringValue(state -> state.ui().note()));
         applyNoteTone(fxStore.read().ui().note());
+        loginOverlay.visibleProperty().bind(booleanValue(state -> state.ui().loginOverlayVisible()));
+        loginOverlay.managedProperty().bind(loginOverlay.visibleProperty());
 
         syncLoginFields(fxStore.read());
         fxStore.stateProperty().addListener((_, _, newValue) -> {
             syncLoginFields(newValue);
             applyNoteTone(newValue.ui().note());
+            applyPathTone(newValue);
         });
+        applyPathTone(fxStore.read());
 
-        connect.setOnAction(_ -> {
+        connect.setOnAction(_ -> fxStore.dispatch(new Msg.LoginOverlayOpened()));
+        loginCancel.setOnAction(_ -> fxStore.dispatch(new Msg.LoginOverlayClosed()));
+        loginSubmit.setOnAction(_ -> {
             fxStore.dispatch(new Msg.ConnectRequested(
               baseUrl.getText(),
               new Credentials(username.getText(), password.getText())
@@ -130,7 +251,7 @@ public final class DashboardView {
             password.clear();
         });
         refresh.setOnAction(_ -> fxStore.dispatch(new Msg.RefreshRequested()));
-        connect.disableProperty().bind(booleanValue(state -> state.ui().busy()));
+        loginSubmit.disableProperty().bind(booleanValue(state -> state.ui().busy()));
         refresh.disableProperty().bind(booleanValue(state ->
           !state.ui().canRefresh() || state.ui().busy()));
 
@@ -151,20 +272,6 @@ public final class DashboardView {
         }
     }
 
-    private Label value(String id, Function<AppState, String> projector) {
-        var label = new Label("-");
-        label.setId(id);
-        label.getStyleClass().add("metric-value");
-        label.textProperty().bind(stringValue(projector));
-        return label;
-    }
-
-    private Label value(String id, Function<AppState, String> projector, String tone) {
-        var label = value(id, projector);
-        label.getStyleClass().add(tone);
-        return label;
-    }
-
     private StringBinding stringValue(Function<AppState, String> projector) {
         return Bindings.createStringBinding(() ->
           safe(projector.apply(fxStore.stateProperty().get())), fxStore.stateProperty());
@@ -174,27 +281,220 @@ public final class DashboardView {
         return Bindings.createBooleanBinding(() -> projector.apply(fxStore.stateProperty().get()), fxStore.stateProperty());
     }
 
-    private void row(GridPane grid, int index, String title, Labeled value) {
-        var label = new Label(title);
-        label.getStyleClass().add("metric-label");
-        grid.add(label, 0, index);
-        grid.add(value, 1, index);
+    private Label requiredLabel(Parent root, String id) {
+        return findById(root, id)
+          .filter(Label.class::isInstance)
+          .map(Label.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing label: " + id));
     }
 
-    private String commonValue(Optional<CommonDashboard> common, Function<CommonDashboard, String> projector) {
-        return common.map(projector).orElse("-");
+    private Arc requiredArc(Parent root, String id) {
+        return findById(root, id)
+          .filter(Arc.class::isInstance)
+          .map(Arc.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing arc: " + id));
     }
 
-    private String radioValue(AppState state, Function<RadioState, String> projector) {
-        return state.dashboard().radio().map(projector).orElse("-");
+    private HBox requiredHBox(Parent root, String id) {
+        return findById(root, id)
+          .filter(HBox.class::isInstance)
+          .map(HBox.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing hbox: " + id));
     }
 
-    private String statusBarValue(AppState state, Function<StatusBarState, String> projector) {
-        return state.dashboard().statusBar().map(projector).orElse("-");
+    private Optional<Node> findById(Node node, String id) {
+        if (id.equals(node.getId())) {
+            return Optional.of(node);
+        }
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                var match = findById(child, id);
+                if (match.isPresent()) {
+                    return match;
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     private String safe(String value) {
         return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String formatDualMetricValue(String value) {
+        if (value == null || value.isBlank()) {
+            return "-/-";
+        }
+        var parts = value.split("/", -1);
+        var fourG = normalizeMetricPart(parts.length > 0 ? parts[0] : "-");
+        var fiveG = normalizeMetricPart(parts.length > 1 ? parts[1] : "-");
+        return fourG + "/" + fiveG;
+    }
+
+    private String normalizeMetricPart(String value) {
+        if (value == null || value.isBlank()) {
+            return "-";
+        }
+        var normalized = value.trim()
+          .replaceAll("(?i)\\s*dBm\\s*$", "")
+          .replaceAll("(?i)\\s*dB\\s*$", "")
+          .trim();
+        return normalized.isBlank() ? "-" : normalized;
+    }
+
+    private void applyRsrpGauge(String text) {
+        if (rsrpGaugeFill == null) {
+            return;
+        }
+        parseRsrp(text)
+          .ifPresentOrElse(
+            value -> {
+                applyRsrpFillLength(value);
+                applyRsrpTone(value);
+                applySignalChipTone(value);
+                applySignalChipText(value);
+                applySignalHeroCaption(value);
+            },
+            () -> {
+                applyRsrpFillLength(RSRP_MIN);
+                applyRsrpTone(RSRP_MIN);
+                applySignalChipTone(RSRP_MIN);
+                applySignalChipText(RSRP_MIN);
+                applySignalHeroCaption(RSRP_MIN);
+            }
+          );
+    }
+
+    private Optional<Double> parseRsrp(String text) {
+        if (text == null || text.isBlank()) {
+            return Optional.empty();
+        }
+        var normalized = text.replace('\u2212', '-');
+        var matcher = Pattern.compile("-?\\d+(\\.\\d+)?").matcher(normalized);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Double.valueOf(matcher.group()));
+        } catch (NumberFormatException issue) {
+            return Optional.empty();
+        }
+    }
+
+    private void applyRsrpFillLength(double value) {
+        var clamped = Math.max(RSRP_MIN, Math.min(RSRP_MAX, value));
+        var ratio = (clamped - RSRP_MIN) / (RSRP_MAX - RSRP_MIN);
+        var constrainedRatio = Math.max(0d, Math.min(1d, ratio));
+        rsrpGaugeFill.setLength(-1d * constrainedRatio * RSRP_SWEEP);
+    }
+
+    private void applyRsrpTone(double value) {
+        String tone = rsrpToneClass(value);
+        applyRsrpTone(rsrpGaugeFill, tone);
+    }
+
+    private void applyRsrpTone(Arc zone, String tone) {
+        zone.getStyleClass().removeAll(
+          RSRP_TONE_NO_SIGNAL,
+          RSRP_TONE_POOR,
+          RSRP_TONE_FAIR,
+          RSRP_TONE_GOOD,
+          RSRP_TONE_EXCELLENT
+        );
+        zone.getStyleClass().add(tone);
+    }
+
+    private String rsrpToneClass(double value) {
+        if (value <= -110d) {
+            return RSRP_TONE_NO_SIGNAL;
+        }
+        if (value <= -100d) {
+            return RSRP_TONE_POOR;
+        }
+        if (value <= -90d) {
+            return RSRP_TONE_FAIR;
+        }
+        if (value <= -80d) {
+            return RSRP_TONE_GOOD;
+        }
+        return RSRP_TONE_EXCELLENT;
+    }
+
+    private void applySignalHeroCaption(double value) {
+        if (signalHeroCaption == null) {
+            return;
+        }
+        signalHeroCaption.setText(rsrpDescription(value));
+    }
+
+    private void applySignalChipText(double value) {
+        if (signalChipText == null) {
+            return;
+        }
+        signalChipText.setText(rsrpQuality(value));
+    }
+
+    private void applySignalChipTone(double value) {
+        if (signalChip == null) {
+            return;
+        }
+        var tone = rsrpChipToneClass(value);
+        signalChip.getStyleClass().removeAll(
+          CHIP_TONE_NO_SIGNAL,
+          CHIP_TONE_POOR,
+          CHIP_TONE_FAIR,
+          CHIP_TONE_GOOD,
+          CHIP_TONE_EXCELLENT
+        );
+        signalChip.getStyleClass().add(tone);
+    }
+
+    private String rsrpQuality(double value) {
+        if (value <= -110d) {
+            return "No signal";
+        }
+        if (value <= -100d) {
+            return "Poor";
+        }
+        if (value <= -90d) {
+            return "Fair";
+        }
+        if (value <= -80d) {
+            return "Good";
+        }
+        return "Excellent";
+    }
+
+    private String rsrpChipToneClass(double value) {
+        if (value <= -110d) {
+            return CHIP_TONE_NO_SIGNAL;
+        }
+        if (value <= -100d) {
+            return CHIP_TONE_POOR;
+        }
+        if (value <= -90d) {
+            return CHIP_TONE_FAIR;
+        }
+        if (value <= -80d) {
+            return CHIP_TONE_GOOD;
+        }
+        return CHIP_TONE_EXCELLENT;
+    }
+
+    private String rsrpDescription(double value) {
+        if (value <= -110d) {
+            return "Connection unusable or dropped";
+        }
+        if (value <= -100d) {
+            return "Drops likely, very slow speeds";
+        }
+        if (value <= -90d) {
+            return "Usable but inconsistent";
+        }
+        if (value <= -80d) {
+            return "Reliable for most tasks";
+        }
+        return "Strong, stable, fast speeds";
     }
 
     private void applyNoteTone(String note) {
@@ -213,5 +513,33 @@ public final class DashboardView {
             return;
         }
         noteLabel.getStyleClass().add(NOTE_SUCCESS);
+    }
+
+    private void applyPathTone(AppState state) {
+        var common = state.dashboard().common();
+        var ip = common.map(CommonDashboard::ip).orElse("-");
+        var primary = common.map(CommonDashboard::primaryDns).orElse("-");
+        var secondary = common.map(CommonDashboard::secondaryDns).orElse("-");
+        var routerUp = !"-".equals(ip);
+        var primaryUp = !"-".equals(primary);
+        var secondaryUp = !"-".equals(secondary);
+        tone(routerPathNode, routerUp ? "path-node-active" : "path-node-inactive");
+        tone(internetPathNode, routerUp ? "path-node-active" : "path-node-inactive");
+        tone(primaryDnsPathNode, primaryUp ? "path-node-active" : "path-node-inactive");
+        tone(secondaryDnsPathNode, secondaryUp ? "path-node-active" : "path-node-fallback");
+        tone(primaryDnsLink, primaryUp ? "path-link-active" : "path-link-inactive");
+        tone(secondaryDnsLink, secondaryUp ? "path-link-active" : "path-link-fallback");
+    }
+
+    private void tone(Labeled node, String tone) {
+        node.getStyleClass().removeAll(
+          "path-node-active",
+          "path-node-inactive",
+          "path-node-fallback",
+          "path-link-active",
+          "path-link-inactive",
+          "path-link-fallback"
+        );
+        node.getStyleClass().add(tone);
     }
 }

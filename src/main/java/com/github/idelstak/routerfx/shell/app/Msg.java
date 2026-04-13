@@ -6,6 +6,12 @@ import java.util.*;
 
 public sealed interface Msg {
 
+    record LoginOverlayOpened() implements Msg {
+    }
+
+    record LoginOverlayClosed() implements Msg {
+    }
+
     record ConnectRequested(String baseUrl, Credentials credentials) implements Msg {
 
         public ConnectRequested {

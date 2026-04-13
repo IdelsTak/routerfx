@@ -19,7 +19,7 @@ public final class LoginEffect implements Effect {
         return switch (msg) {
             case Msg.ConnectRequested(var baseUrl, var credentials) ->
               Optional.of(connect(baseUrl, credentials));
-            case Msg.RefreshRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
+            case Msg.LoginOverlayOpened _, Msg.LoginOverlayClosed _, Msg.RefreshRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
               Optional.empty();
         };
     }

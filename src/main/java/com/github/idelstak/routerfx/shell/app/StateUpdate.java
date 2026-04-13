@@ -11,6 +11,10 @@ public final class StateUpdate implements Update {
     @Override
     public AppState apply(AppState state, Msg msg) {
         return switch (msg) {
+            case Msg.LoginOverlayOpened _ ->
+                openLoginOverlay(state);
+            case Msg.LoginOverlayClosed _ ->
+                closeLoginOverlay(state);
             case Msg.ConnectRequested(var baseUrl, var credentials) ->
                 connect(state, baseUrl, credentials);
             case Msg.RefreshRequested _ ->
@@ -26,11 +30,31 @@ public final class StateUpdate implements Update {
         };
     }
 
+    private AppState openLoginOverlay(AppState state) {
+        return withUi(state, new UiState(
+          state.ui().busy(),
+          state.ui().connected(),
+          state.ui().note(),
+          state.ui().canRefresh(),
+          true
+        ));
+    }
+
+    private AppState closeLoginOverlay(AppState state) {
+        return withUi(state, new UiState(
+          state.ui().busy(),
+          state.ui().connected(),
+          state.ui().note(),
+          state.ui().canRefresh(),
+          false
+        ));
+    }
+
     private AppState connect(AppState state, String baseUrl, Credentials credentials) {
         return new AppState(
           new LoginState(baseUrl, credentials.username(), Optional.empty(), Optional.empty()),
           new DashboardState(state.dashboard().common(), Optional.empty(), Optional.empty(), Optional.empty(), false, state.dashboard().updates()),
-          new UiState(true, false, "Connecting", true)
+          new UiState(true, false, "Connecting", true, state.ui().loginOverlayVisible())
         );
     }
 
@@ -38,7 +62,7 @@ public final class StateUpdate implements Update {
         return new AppState(
           state.login(),
           new DashboardState(state.dashboard().common(), state.dashboard().radio(), state.dashboard().statusBar(), Optional.empty(), true, state.dashboard().updates()),
-          new UiState(true, state.login().session().isPresent(), "Refreshing", true)
+          new UiState(true, state.login().session().isPresent(), "Refreshing", true, state.ui().loginOverlayVisible())
         );
     }
 
@@ -46,7 +70,7 @@ public final class StateUpdate implements Update {
         return new AppState(
           new LoginState(state.login().baseUrl(), state.login().username(), Optional.of(session), Optional.empty()),
           new DashboardState(state.dashboard().common(), Optional.of(radio), Optional.of(statusBar), Optional.empty(), false, state.dashboard().updates() + 1),
-          new UiState(false, true, "Connected", true)
+          new UiState(false, true, "Connected", true, false)
         );
     }
 
@@ -54,7 +78,7 @@ public final class StateUpdate implements Update {
         return new AppState(
           state.login(),
           new DashboardState(state.dashboard().common(), Optional.of(radio), Optional.of(statusBar), Optional.empty(), false, state.dashboard().updates() + 1),
-          new UiState(false, state.login().session().isPresent(), "Updated", true)
+          new UiState(false, state.login().session().isPresent(), "Updated", true, state.ui().loginOverlayVisible())
         );
     }
 
@@ -62,7 +86,7 @@ public final class StateUpdate implements Update {
         return new AppState(
           state.login(),
           new DashboardState(Optional.of(common), state.dashboard().radio(), state.dashboard().statusBar(), Optional.empty(), false, state.dashboard().updates() + 1),
-          new UiState(false, state.login().session().isPresent(), "Common dashboard updated", true)
+          new UiState(false, state.login().session().isPresent(), "Common dashboard updated", true, state.ui().loginOverlayVisible())
         );
     }
 
@@ -76,8 +100,12 @@ public final class StateUpdate implements Update {
             Optional.of(fault)
           ),
           new DashboardState(state.dashboard().common(), state.dashboard().radio(), state.dashboard().statusBar(), Optional.of(fault), false, state.dashboard().updates()),
-          new UiState(false, session.isPresent(), note(fault), true)
+          new UiState(false, session.isPresent(), note(fault), true, state.ui().loginOverlayVisible())
         );
+    }
+
+    private AppState withUi(AppState state, UiState ui) {
+        return new AppState(state.login(), state.dashboard(), ui);
     }
 
     private Optional<Session> session(Optional<Session> session, RouterFault fault) {

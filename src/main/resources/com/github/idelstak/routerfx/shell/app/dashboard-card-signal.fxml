@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<VBox id="signalCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <Label styleClass="card-title" text="SIGNAL STRENGTH" />
+    <HBox styleClass="signal-layout">
+      <children>
+        <VBox styleClass="signal-hero">
+          <children>
+            <StackPane styleClass="signal-gauge">
+              <children>
+                <VBox styleClass="signal-gauge-core" StackPane.alignment="TOP_CENTER">
+                  <children>
+                    <Label styleClass="signal-gauge-title" text="RSRP" />
+                    <Label id="rsrpValue" fx:id="rsrpValue" styleClass="signal-gauge-value" text="-" />
+                    <Label styleClass="signal-gauge-unit" text="dBm" />
+                  </children>
+                </VBox>
+                <Pane maxHeight="260.0" maxWidth="260.0" pickOnBounds="false">
+                  <children>
+                    <Arc id="rsrpGaugeTrack" fx:id="rsrpGaugeTrack" centerX="130.0" centerY="130.0" length="-180.0" radiusX="120.0" radiusY="120.0" startAngle="180.0" styleClass="signal-gauge-track" type="OPEN" />
+                    <Arc id="rsrpGaugeFill" fx:id="rsrpGaugeFill" centerX="130.0" centerY="130.0" length="0.0" radiusX="120.0" radiusY="120.0" startAngle="180.0" styleClass="signal-gauge-fill" type="OPEN" />
+                  </children>
+                </Pane>
+              </children>
+            </StackPane>
+            <HBox styleClass="signal-gauge-scale">
+              <children>
+                <Label styleClass="range-label" text="-140" />
+                <Pane HBox.hgrow="ALWAYS" />
+                <Label styleClass="range-label" text="-44" />
+              </children>
+            </HBox>
+            <VBox styleClass="signal-hero-note">
+              <children>
+                        <HBox>
+                           <children>
+                              <Region HBox.hgrow="ALWAYS" />
+                      <HBox id="signalChip" fx:id="signalChip">
+                        <styleClass>
+                          <String fx:value="signal-chip" />
+                          <String fx:value="signal-chip-tone-nosignal" />
+                        </styleClass>
+                        <children>
+                          <Label id="signalChipDot" fx:id="signalChipDot" styleClass="signal-chip-dot" text="●" />
+                          <Label id="signalChipText" fx:id="signalChipText" styleClass="signal-chip-text" text="No signal" />
+                        </children>
+                      </HBox>
+                              <Region layoutX="91.0" layoutY="10.0" HBox.hgrow="ALWAYS" />
+                           </children>
+                        </HBox>
+                <Label id="signalHeroCaption" fx:id="signalHeroCaption" styleClass="signal-hero-caption" text="Connection unusable or dropped" />
+              </children>
+            </VBox>
+          </children>
+        </VBox>
+
+        <Region styleClass="signal-divider" />
+
+        <VBox styleClass="signal-metrics" HBox.hgrow="ALWAYS">
+          <children>
+            <VBox styleClass="metric-block">
+              <children>
+                <HBox styleClass="metric-head">
+                  <children>
+                    <Label styleClass="metric-block-title" text="RSSI" />
+                    <Label styleClass="metric-block-subtitle" text="Total received power" HBox.hgrow="ALWAYS" />
+                    <HBox styleClass="metric-value-wrap">
+                      <children>
+                        <Label id="rssiValue" fx:id="rssiValue" styleClass="metric-block-value" text="-" />
+                        <Label styleClass="metric-block-unit" text="dBm" />
+                      </children>
+                    </HBox>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range">
+                  <children>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green-soft" />
+                      </styleClass>
+                    </Region>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range-labels">
+                  <children>
+                    <Label styleClass="range-label" text="-100 weak" />
+                    <Label text="strong ▲">
+                      <styleClass>
+                        <String fx:value="range-label" />
+                        <String fx:value="range-label-active" />
+                      </styleClass>
+                    </Label>
+                    <Label styleClass="range-label" text="-50 max" />
+                  </children>
+                </HBox>
+              </children>
+            </VBox>
+
+            <Region styleClass="metric-separator" />
+
+            <VBox styleClass="metric-block">
+              <children>
+                <HBox styleClass="metric-head">
+                  <children>
+                    <Label styleClass="metric-block-title" text="SINR" />
+                    <Label styleClass="metric-block-subtitle" text="Signal vs noise &amp; interference" HBox.hgrow="ALWAYS" />
+                    <Label text="Good">
+                      <styleClass>
+                        <String fx:value="signal-chip" />
+                        <String fx:value="metric-chip-warning" />
+                      </styleClass>
+                    </Label>
+                    <HBox styleClass="metric-value-wrap">
+                      <children>
+                        <Label id="sinrValue" fx:id="sinrValue" styleClass="metric-block-value" text="-" />
+                        <Label styleClass="metric-block-unit" text="dB" />
+                      </children>
+                    </HBox>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range">
+                  <children>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-red-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-amber-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-amber" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green-soft" />
+                      </styleClass>
+                    </Region>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range-labels">
+                  <children>
+                    <Label styleClass="range-label" text="&lt;0 poor" />
+                    <Label styleClass="range-label" text="0-10 fair" />
+                    <Label text="10-20 good ▲">
+                      <styleClass>
+                        <String fx:value="range-label" />
+                        <String fx:value="range-label-active" />
+                      </styleClass>
+                    </Label>
+                    <Label styleClass="range-label" text="&gt;20 best" />
+                  </children>
+                </HBox>
+              </children>
+            </VBox>
+
+            <Region styleClass="metric-separator" />
+
+            <VBox styleClass="metric-block">
+              <children>
+                <HBox styleClass="metric-head">
+                  <children>
+                    <Label styleClass="metric-block-title" text="RSRQ" />
+                    <Label styleClass="metric-block-subtitle" text="Channel congestion" HBox.hgrow="ALWAYS" />
+                    <Label text="Fair">
+                      <styleClass>
+                        <String fx:value="signal-chip" />
+                        <String fx:value="metric-chip-warning" />
+                      </styleClass>
+                    </Label>
+                    <HBox styleClass="metric-value-wrap">
+                      <children>
+                        <Label id="rsrqValue" fx:id="rsrqValue" styleClass="metric-block-value" text="-" />
+                        <Label styleClass="metric-block-unit" text="dB" />
+                      </children>
+                    </HBox>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range">
+                  <children>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-red-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-amber-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-amber" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green-soft" />
+                      </styleClass>
+                    </Region>
+                    <Region HBox.hgrow="ALWAYS">
+                      <styleClass>
+                        <String fx:value="metric-range-seg" />
+                        <String fx:value="metric-range-green-soft" />
+                      </styleClass>
+                    </Region>
+                  </children>
+                </HBox>
+                <HBox styleClass="metric-range-labels">
+                  <children>
+                    <Label styleClass="range-label" text="-20 bad" />
+                    <Label text="-10 fair ▲">
+                      <styleClass>
+                        <String fx:value="range-label" />
+                        <String fx:value="range-label-active" />
+                      </styleClass>
+                    </Label>
+                    <Label styleClass="range-label" text="-5 good" />
+                    <Label styleClass="range-label" text="-3 best" />
+                  </children>
+                </HBox>
+              </children>
+            </VBox>
+
+          </children>
+        </VBox>
+      </children>
+    </HBox>
+  </children>
+</VBox>

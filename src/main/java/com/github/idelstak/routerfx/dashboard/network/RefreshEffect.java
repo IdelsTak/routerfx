@@ -18,7 +18,7 @@ public final class RefreshEffect implements Effect {
         return switch (msg) {
             case Msg.RefreshRequested _ ->
               Optional.of(refresh(state));
-            case Msg.ConnectRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
+            case Msg.LoginOverlayOpened _, Msg.LoginOverlayClosed _, Msg.ConnectRequested _, Msg.Authenticated _, Msg.DashboardLoaded _, Msg.CommonLoaded _, Msg.Failed _ ->
               Optional.empty();
         };
     }

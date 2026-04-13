@@ -3,11 +3,14 @@ package com.github.idelstak.routerfx.shell.app;
 import com.github.idelstak.routerfx.router.protocol.*;
 import com.github.idelstak.routerfx.shared.result.*;
 import com.github.idelstak.routerfx.shared.value.*;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
 import javafx.stage.*;
 import org.junit.jupiter.api.*;
 import org.testfx.framework.junit5.*;
@@ -66,6 +69,116 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void preLoginKeepsLoginOverlayHidden() {
+        assertThat("Expected login overlay to be hidden before explicit login action", lookup("#loginOverlay").query().isVisible(), is(false));
+    }
+
+    @Test
+    void preLoginRendersFourDistinctCardSections() {
+        assertThat("Expected top status card to be visible", lookup("#topStatusCard").query().isVisible(), is(true));
+        assertThat("Expected signal card to be visible", lookup("#signalCard").query().isVisible(), is(true));
+        assertThat("Expected network path card to be visible", lookup("#networkPathCard").query().isVisible(), is(true));
+        assertThat("Expected footer stats card to be visible", lookup("#footerStatsCard").query().isVisible(), is(true));
+    }
+
+    @Test
+    void preLoginShowsNetworkPathNodes() {
+        assertThat("Expected router node to be visible in network path card", lookup("#routerPathNode").query().isVisible(), is(true));
+        assertThat("Expected internet node to be visible in network path card", lookup("#internetPathNode").query().isVisible(), is(true));
+        assertThat("Expected primary DNS node to be visible in network path card", lookup("#primaryDnsPathNode").query().isVisible(), is(true));
+        assertThat("Expected secondary DNS node to be visible in network path card", lookup("#secondaryDnsPathNode").query().isVisible(), is(true));
+    }
+
+    @Test
+    void rsrpGaugeAppliesExpectedZoneColorForEveryLevel() {
+        AtomicInteger level = new AtomicInteger(-140);
+        commonResult = () -> new Result.Success<>(commonWithRsrp("4G+", "18:13:29", level.get()));
+        List<String> failures = new ArrayList<>();
+        Arc track = lookup("#rsrpGaugeTrack").queryAs(Arc.class);
+        Arc fill = lookup("#rsrpGaugeFill").queryAs(Arc.class);
+        for (int rsrp = -140; rsrp <= -44; rsrp++) {
+            final int currentRsrp = rsrp;
+            level.set(rsrp);
+            clickOn("#refreshButton");
+            waitForCondition(() -> lookup("#rsrpValue").queryLabeled().getText().contains(Integer.toString(currentRsrp)));
+            double expectedLength = expectedRsrpFillLength(currentRsrp);
+            if (Math.abs(fill.getLength() - expectedLength) > 0.001d) {
+                failures.add(currentRsrp + " expected fill length " + expectedLength + " but was " + fill.getLength());
+            }
+            String expectedTone = expectedRsrpToneClass(currentRsrp);
+            if (!hasTone(fill, expectedTone)) {
+                failures.add(currentRsrp + " expected fill tone " + expectedTone);
+            }
+            if (Math.abs(track.getLength() + 180d) > 0.001d) {
+                failures.add(currentRsrp + " expected static track length -180.0 but was " + track.getLength());
+            }
+        }
+        assertTrue(failures.isEmpty(), "Expected gauge segments for all RSRP levels to map correctly; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void rsrpChipFollowsQualityToneTextAndColorsForEveryLevel() {
+        AtomicInteger level = new AtomicInteger(-140);
+        commonResult = () -> new Result.Success<>(commonWithRsrp("4G+", "18:13:29", level.get()));
+        List<String> failures = new ArrayList<>();
+        Parent chip = lookup("#signalChip").queryAs(Parent.class);
+        Label chipDot = lookup("#signalChipDot").queryAs(Label.class);
+        Label chipText = lookup("#signalChipText").queryAs(Label.class);
+        for (int rsrp = -140; rsrp <= -44; rsrp++) {
+            final int currentRsrp = rsrp;
+            level.set(rsrp);
+            clickOn("#refreshButton");
+            waitForCondition(() -> lookup("#rsrpValue").queryLabeled().getText().contains(Integer.toString(currentRsrp)));
+
+            String expectedTone = expectedRsrpChipToneClass(currentRsrp);
+            if (!chip.getStyleClass().contains(expectedTone)) {
+                failures.add(currentRsrp + " expected chip tone " + expectedTone + " but had " + chip.getStyleClass());
+            }
+
+            String expectedQuality = expectedRsrpQuality(currentRsrp);
+            if (!expectedQuality.equals(chipText.getText())) {
+                failures.add(currentRsrp + " expected chip text " + expectedQuality + " but was " + chipText.getText());
+            }
+
+            Color expectedDot = expectedChipDotColor(currentRsrp);
+            if (!paintMatches(chipDot.getTextFill(), expectedDot)) {
+                failures.add(currentRsrp + " expected chip dot color " + expectedDot + " but was " + chipDot.getTextFill());
+            }
+
+            Color expectedTextColor = expectedChipTextColor(currentRsrp);
+            if (!paintMatches(chipText.getTextFill(), expectedTextColor)) {
+                failures.add(currentRsrp + " expected chip text color " + expectedTextColor + " but was " + chipText.getTextFill());
+            }
+        }
+        assertTrue(failures.isEmpty(), "Expected chip tone/text/colors for all RSRP levels to map correctly; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void rsrpCaptionFollowsDescriptionRangeForEveryLevel() {
+        AtomicInteger level = new AtomicInteger(-140);
+        commonResult = () -> new Result.Success<>(commonWithRsrp("4G+", "18:13:29", level.get()));
+        List<String> failures = new ArrayList<>();
+        Label caption = lookup("#signalHeroCaption").queryAs(Label.class);
+        for (int rsrp = -140; rsrp <= -44; rsrp++) {
+            final int currentRsrp = rsrp;
+            level.set(rsrp);
+            clickOn("#refreshButton");
+            waitForCondition(() -> lookup("#rsrpValue").queryLabeled().getText().contains(Integer.toString(currentRsrp)));
+            String expectedCaption = expectedRsrpDescription(currentRsrp);
+            if (!expectedCaption.equals(caption.getText())) {
+                failures.add(currentRsrp + " expected caption " + expectedCaption + " but was " + caption.getText());
+            }
+        }
+        assertTrue(failures.isEmpty(), "Expected caption descriptions for all RSRP levels to map correctly; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void connectButtonShowsLoginOverlay() {
+        clickOn("#connectButton");
+        assertThat("Expected connect button to show login overlay", lookup("#loginOverlay").query().isVisible(), is(true));
+    }
+
+    @Test
     void shellScrollPaneKeepsHorizontalBarHidden() {
         assertThat("Expected shell scroll pane to keep horizontal bar policy set to NEVER", lookup(".shell-scroll").queryAs(ScrollPane.class).getHbarPolicy(), is(ScrollPane.ScrollBarPolicy.NEVER));
     }
@@ -104,18 +217,25 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void successfulLoginSubmitHidesLoginOverlay() {
+        connect();
+        assertThat("Expected login overlay to be hidden after successful authentication", lookup("#loginOverlay").query().isVisible(), is(false));
+    }
+
+    @Test
     void delayedConnectDisablesConnectButtonWhileLoading() {
         challengeResult = () -> {
             pauseMillis(350);
             return new Result.Success<>(new Challenge("tok"));
         };
+        clickOn("#connectButton");
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        clickOn("#connectButton");
+        submitLogin();
         WaitForAsyncUtils.sleep(60, TimeUnit.MILLISECONDS);
         WaitForAsyncUtils.waitForFxEvents();
-        assertThat("Expected connect button to be disabled while login is in-flight", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(true));
+        assertThat("Expected login submit button to be disabled while login is in-flight", lookup("#loginSubmitButton").queryAs(Button.class).isDisabled(), is(true));
     }
 
     @Test
@@ -124,12 +244,13 @@ final class DesktopAppTest extends ApplicationTest {
             pauseMillis(250);
             return new Result.Success<>(new Challenge("tok"));
         };
+        clickOn("#connectButton");
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        clickOn("#connectButton");
-        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
-        assertThat("Expected connect button to re-enable after login completes", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(false));
+        submitLogin();
+        waitForCondition(() -> !lookup("#loginSubmitButton").queryAs(Button.class).isDisabled());
+        assertThat("Expected login submit button to re-enable after login completes", lookup("#loginSubmitButton").queryAs(Button.class).isDisabled(), is(false));
     }
 
     @Test
@@ -276,17 +397,27 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     private void connect() {
+        clickOn("#connectButton");
+        waitForCondition(() -> lookup("#loginOverlay").query().isVisible());
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
-        clickOn("#connectButton");
+        submitLogin();
         waitForCondition(() -> {
             String note = lookup("#noteLabel").queryLabeled().getText();
             return lookup("#authPanel").query().isVisible()
               || "Authentication failed".equals(note)
               || "Connected".equals(note);
         });
+    }
+
+    private void submitLogin() {
+        waitForCondition(() -> {
+            Button submit = lookup("#loginSubmitButton").queryAs(Button.class);
+            return submit.isVisible() && !submit.isDisabled();
+        });
+        Button submit = lookup("#loginSubmitButton").queryAs(Button.class);
+        interact(submit::fire);
     }
 
     private void waitForCondition(Supplier<Boolean> condition) {
@@ -316,6 +447,127 @@ final class DesktopAppTest extends ApplicationTest {
 
     private CommonDashboard common(String networkType, String runningTime) {
         return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", "-77dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
+    }
+
+    private CommonDashboard commonWithRsrp(String networkType, String runningTime, int rsrp) {
+        return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", rsrp + "dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
+    }
+
+    private double expectedRsrpFillLength(int rsrp) {
+        double clamped = Math.max(-140d, Math.min(-44d, rsrp));
+        double ratio = (clamped + 140d) / 96d;
+        return -1d * ratio * 180d;
+    }
+
+    private String expectedRsrpToneClass(int rsrp) {
+        if (rsrp <= -110) {
+            return "signal-gauge-tone-nosignal";
+        }
+        if (rsrp <= -100) {
+            return "signal-gauge-tone-poor";
+        }
+        if (rsrp <= -90) {
+            return "signal-gauge-tone-fair";
+        }
+        if (rsrp <= -80) {
+            return "signal-gauge-tone-good";
+        }
+        return "signal-gauge-tone-excellent";
+    }
+
+    private String expectedRsrpChipToneClass(int rsrp) {
+        if (rsrp <= -110) {
+            return "signal-chip-tone-nosignal";
+        }
+        if (rsrp <= -100) {
+            return "signal-chip-tone-poor";
+        }
+        if (rsrp <= -90) {
+            return "signal-chip-tone-fair";
+        }
+        if (rsrp <= -80) {
+            return "signal-chip-tone-good";
+        }
+        return "signal-chip-tone-excellent";
+    }
+
+    private String expectedRsrpQuality(int rsrp) {
+        if (rsrp <= -110) {
+            return "No signal";
+        }
+        if (rsrp <= -100) {
+            return "Poor";
+        }
+        if (rsrp <= -90) {
+            return "Fair";
+        }
+        if (rsrp <= -80) {
+            return "Good";
+        }
+        return "Excellent";
+    }
+
+    private String expectedRsrpDescription(int rsrp) {
+        if (rsrp <= -110) {
+            return "Connection unusable or dropped";
+        }
+        if (rsrp <= -100) {
+            return "Drops likely, very slow speeds";
+        }
+        if (rsrp <= -90) {
+            return "Usable but inconsistent";
+        }
+        if (rsrp <= -80) {
+            return "Reliable for most tasks";
+        }
+        return "Strong, stable, fast speeds";
+    }
+
+    private Color expectedChipDotColor(int rsrp) {
+        if (rsrp <= -110) {
+            return Color.web("#e24b4a");
+        }
+        if (rsrp <= -100) {
+            return Color.web("#f09595");
+        }
+        if (rsrp <= -90) {
+            return Color.web("#ef9f27");
+        }
+        if (rsrp <= -80) {
+            return Color.web("#c0dd97");
+        }
+        return Color.web("#639922");
+    }
+
+    private Color expectedChipTextColor(int rsrp) {
+        if (rsrp <= -110) {
+            return Color.web("#8d2f2f");
+        }
+        if (rsrp <= -100) {
+            return Color.web("#9a5050");
+        }
+        if (rsrp <= -90) {
+            return Color.web("#633806");
+        }
+        if (rsrp <= -80) {
+            return Color.web("#5e7f38");
+        }
+        return Color.web("#27500A");
+    }
+
+    private boolean paintMatches(Paint actual, Color expected) {
+        if (!(actual instanceof Color color)) {
+            return false;
+        }
+        double epsilon = 0.01d;
+        return Math.abs(color.getRed() - expected.getRed()) < epsilon
+          && Math.abs(color.getGreen() - expected.getGreen()) < epsilon
+          && Math.abs(color.getBlue() - expected.getBlue()) < epsilon
+          && Math.abs(color.getOpacity() - expected.getOpacity()) < epsilon;
+    }
+
+    private boolean hasTone(Arc arc, String tone) {
+        return arc.getStyleClass().contains(tone);
     }
 
     private RouterApi api() {

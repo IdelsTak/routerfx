@@ -9,6 +9,21 @@ import static org.hamcrest.Matchers.*;
 final class StateUpdateTest {
 
     @Test
+    void loginOverlayOpenedMarksOverlayAsVisible() {
+        var update = new StateUpdate();
+        var state = update.apply(AppState.initial(), new Msg.LoginOverlayOpened());
+        assertThat("Expected login-overlay-opened transition to show login overlay", state.ui().loginOverlayVisible(), is(true));
+    }
+
+    @Test
+    void loginOverlayClosedMarksOverlayAsHidden() {
+        var update = new StateUpdate();
+        var opened = update.apply(AppState.initial(), new Msg.LoginOverlayOpened());
+        var state = update.apply(opened, new Msg.LoginOverlayClosed());
+        assertThat("Expected login-overlay-closed transition to hide login overlay", state.ui().loginOverlayVisible(), is(false));
+    }
+
+    @Test
     void connectRequestedMarksStateAsBusyAndDisconnected() {
         var update = new StateUpdate();
         var state = update.apply(

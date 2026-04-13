@@ -1,70 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane id="shellRoot" xmlns="http://javafx.com/javafx/27" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.idelstak.routerfx.shell.app.DashboardView" styleClass="app-shell" stylesheets="@fonts.css,@root-theme.css,@dashboard-theme.css">
+<BorderPane id="shellRoot" fx:id="shellRoot" styleClass="app-shell" stylesheets="@fonts.css,@root-theme.css,@dashboard-theme.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.idelstak.routerfx.shell.app.DashboardView">
   <center>
-    <ScrollPane styleClass="shell-scroll">
-      <content>
-        <VBox styleClass="shell-content">
-          <children>
-            <HBox styleClass="shell-header">
+    <StackPane>
+      <children>
+        <ScrollPane styleClass="shell-scroll">
+          <content>
+            <VBox styleClass="shell-content">
               <children>
-                <VBox styleClass="brand-block">
+                <HBox styleClass="shell-header">
                   <children>
-                    <Label text="RouterFX" styleClass="brand-title"/>
-                    <Label text="Router dashboard" styleClass="brand-subtitle"/>
+                    <VBox styleClass="brand-block">
+                      <children>
+                        <Label styleClass="brand-title" text="RouterFX" />
+                        <Label styleClass="brand-subtitle" text="Router dashboard" />
+                      </children>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS" />
+                    <HBox styleClass="header-actions">
+                      <children>
+                        <Button id="refreshButton" fx:id="refresh" text="Refresh" />
+                        <Button id="connectButton" fx:id="connect" text="Log in to router" />
+                      </children>
+                    </HBox>
+                  </children>
+                </HBox>
+
+                <fx:include fx:id="topStatusCard" source="dashboard-card-top-strip.fxml" />
+                <fx:include fx:id="signalCard" source="dashboard-card-signal.fxml" />
+                <fx:include fx:id="networkPathCard" source="dashboard-card-network.fxml" />
+                <fx:include fx:id="footerStatsCard" source="dashboard-card-footer.fxml" />
+
+                <VBox id="authPanel" fx:id="authenticated" styleClass="card-surface">
+                  <children>
+                    <Label styleClass="card-title" text="AUTHENTICATED DASHBOARD" />
+                    <GridPane styleClass="metrics-grid">
+                      <children>
+                        <Label styleClass="metric-label" text="OPERATOR" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label id="operatorValue" fx:id="operatorValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                        <Label styleClass="metric-label" text="CURRENT BAND" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label id="currentBandValue" fx:id="currentBandValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                        <Label styleClass="metric-label" text="BANDWIDTH" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <Label id="bandwidthValue" fx:id="bandwidthValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                        <Label styleClass="metric-label" text="UPTIME" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label id="uptimeValue" fx:id="uptimeValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                        <Label styleClass="metric-label" text="CURRENT TRAFFIC" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                        <Label id="currentFlowValue" fx:id="currentFlowValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                      </children>
+                    </GridPane>
+                    <Label styleClass="card-title" text="STATUS BAR" />
+                    <GridPane styleClass="metrics-grid">
+                      <children>
+                        <Label styleClass="metric-label" text="SIGNAL LEVEL" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label id="statusSignalValue" fx:id="statusSignalValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                          <styleClass>
+                            <String fx:value="metric-value" />
+                            <String fx:value="metric-success" />
+                          </styleClass>
+                        </Label>
+
+                        <Label styleClass="metric-label" text="NETWORK TYPE" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label id="statusNetworkTypeValue" fx:id="statusNetworkTypeValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                        <Label styleClass="metric-label" text="SIM" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <Label id="statusSimValue" fx:id="statusSimValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                        <Label styleClass="metric-label" text="SMS UNREAD" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label id="statusSmsValue" fx:id="statusSmsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                      </children>
+                    </GridPane>
                   </children>
                 </VBox>
               </children>
-            </HBox>
+            </VBox>
+          </content>
+        </ScrollPane>
 
-            <VBox styleClass="card-surface">
+        <VBox id="loginOverlay" fx:id="loginOverlay" styleClass="login-overlay" visible="false">
+          <children>
+            <VBox>
               <children>
-                <Label text="Router access" styleClass="card-title"/>
-                <GridPane styleClass="access-grid">
+                <Label styleClass="card-title" text="ROUTER ACCESS" />
+                <GridPane>
                   <children>
-                    <Label text="Router URL" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                    <TextField fx:id="baseUrl" id="baseUrlField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                    <Label text="Username" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                    <TextField fx:id="username" id="usernameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                    <Label text="Password" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                    <PasswordField fx:id="password" id="passwordField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                    <HBox styleClass="action-row" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                    <Label text="Router URL" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <TextField id="baseUrlField" fx:id="baseUrl" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                    <Label text="Username" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <TextField id="usernameField" fx:id="username" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    <Label text="Password" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <PasswordField id="passwordField" fx:id="password" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                    <HBox GridPane.columnIndex="1" GridPane.rowIndex="3">
+                      <styleClass>
+                        <String fx:value="action-row" />
+                        <String fx:value="login-actions" />
+                      </styleClass>
                       <children>
-                        <Button fx:id="connect" id="connectButton" text="Connect"/>
-                        <Button fx:id="refresh" id="refreshButton" text="Refresh"/>
+                        <Button id="loginSubmitButton" fx:id="loginSubmit" text="Connect" />
+                        <Button id="cancelLoginButton" fx:id="loginCancel" text="Cancel" />
                       </children>
                     </HBox>
                   </children>
                   <columnConstraints>
-                    <ColumnConstraints minWidth="120.0"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints minWidth="120.0" />
+                    <ColumnConstraints hgrow="ALWAYS" />
                   </columnConstraints>
+                  <rowConstraints>
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                  </rowConstraints>
+                  <styleClass>
+                    <String fx:value="access-grid" />
+                    <String fx:value="compact-grid" />
+                  </styleClass>
                 </GridPane>
-                <Label fx:id="noteLabel" id="noteLabel" styleClass="note-label"/>
+                <Label id="noteLabel" fx:id="noteLabel" styleClass="note-label" />
               </children>
-            </VBox>
-
-            <VBox styleClass="card-surface">
-              <children>
-                <Label text="Common Dashboard" styleClass="card-title"/>
-                <GridPane fx:id="commonGrid" styleClass="metrics-grid"/>
-              </children>
-            </VBox>
-
-            <VBox fx:id="authenticated" id="authPanel" styleClass="card-surface">
-              <children>
-                <Label text="Authenticated Dashboard" styleClass="card-title"/>
-                <GridPane fx:id="authGrid" styleClass="metrics-grid"/>
-                <Label text="Status Bar" styleClass="card-title"/>
-                <GridPane fx:id="statusGrid" styleClass="metrics-grid"/>
-              </children>
+              <styleClass>
+                <String fx:value="card-surface" />
+                <String fx:value="login-card" />
+              </styleClass>
             </VBox>
           </children>
         </VBox>
-      </content>
-    </ScrollPane>
+      </children>
+    </StackPane>
   </center>
 </BorderPane>
