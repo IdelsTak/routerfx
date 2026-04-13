@@ -26,7 +26,7 @@ public final class DesktopApp extends Application {
         FxStore fxStore = new FxStore(shell.store());
         DashboardPane pane = new DashboardPane(fxStore);
         stage.setTitle("RouterFX");
-        stage.setScene(new Scene(pane.root(), 780, 860));
+        stage.setScene(new Scene(pane.root(), 900, 860));
         stage.show();
         fxStore.dispatch(new Msg.RefreshRequested());
     }

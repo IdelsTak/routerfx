@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
@@ -173,6 +174,47 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void supportingSignalQualityChipsFollowDefinedThresholds() {
+        record MetricCase(int rssi, int sinr, int rsrq,
+                          String rssiLabel, String rssiTone, String rssiRangeTone,
+                          String sinrLabel, String sinrTone, String sinrRangeTone,
+                          String rsrqLabel, String rsrqTone, String rsrqRangeTone) {
+        }
+        List<MetricCase> cases = List.of(
+          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "Interference dominant", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "Severe congestion", "metric-chip-tone-nosignal", "metric-range-fill-nosignal"),
+          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "High interference", "metric-chip-tone-poor", "metric-range-fill-poor", "High congestion", "metric-chip-tone-poor", "metric-range-fill-poor"),
+          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Moderate interference", "metric-chip-tone-fair", "metric-range-fill-fair", "Moderate congestion", "metric-chip-tone-fair", "metric-range-fill-fair"),
+          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "metric-range-fill-good", "Low interference", "metric-chip-tone-good", "metric-range-fill-good", "Low congestion", "metric-chip-tone-good", "metric-range-fill-good"),
+          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Clean signal", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Clear channel", "metric-chip-tone-excellent", "metric-range-fill-excellent")
+        );
+        List<String> failures = new ArrayList<>();
+        Label rssiChip = lookup("#rssiQualityChip").queryAs(Label.class);
+        Label sinrChip = lookup("#sinrQualityChip").queryAs(Label.class);
+        Label rsrqChip = lookup("#rsrqQualityChip").queryAs(Label.class);
+        AnchorPane rssiRangeTrack = lookup("#rssiRangeTrack").queryAs(AnchorPane.class);
+        Region rssiRangeFill = lookup("#rssiRangeFill").queryAs(Region.class);
+        AnchorPane sinrRangeTrack = lookup("#sinrRangeTrack").queryAs(AnchorPane.class);
+        Region sinrRangeFill = lookup("#sinrRangeFill").queryAs(Region.class);
+        AnchorPane rsrqRangeTrack = lookup("#rsrqRangeTrack").queryAs(AnchorPane.class);
+        Region rsrqRangeFill = lookup("#rsrqRangeFill").queryAs(Region.class);
+        for (MetricCase metricCase : cases) {
+            commonResult = () -> new Result.Success<>(commonWithMetrics("4G+", "18:13:29", -77, metricCase.rssi(), metricCase.rsrq(), metricCase.sinr()));
+            clickOn("#refreshButton");
+            WaitForAsyncUtils.waitForFxEvents();
+            checkMetricChip("RSSI", metricCase.rssiLabel(), metricCase.rssiTone(), rssiChip, failures);
+            checkMetricChip("SINR", metricCase.sinrLabel(), metricCase.sinrTone(), sinrChip, failures);
+            checkMetricChip("RSRQ", metricCase.rsrqLabel(), metricCase.rsrqTone(), rsrqChip, failures);
+            checkMetricRangeFill("RSSI", metricCase.rssiRangeTone(), rssiRangeFill, failures);
+            checkMetricRangeFill("SINR", metricCase.sinrRangeTone(), sinrRangeFill, failures);
+            checkMetricRangeFill("RSRQ", metricCase.rsrqRangeTone(), rsrqRangeFill, failures);
+            checkMetricRangeGeometry("RSSI", normalizedRatio(metricCase.rssi(), -110d, -50d), rssiRangeTrack, rssiRangeFill, failures);
+            checkMetricRangeGeometry("SINR", normalizedRatio(metricCase.sinr(), -3d, 20d), sinrRangeTrack, sinrRangeFill, failures);
+            checkMetricRangeGeometry("RSRQ", normalizedRatio(metricCase.rsrq(), -20d, -5d), rsrqRangeTrack, rsrqRangeFill, failures);
+        }
+        assertTrue(failures.isEmpty(), "Expected supporting metric chip mappings to match thresholds; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
     void connectButtonShowsLoginOverlay() {
         clickOn("#connectButton");
         assertThat("Expected connect button to show login overlay", lookup("#loginOverlay").query().isVisible(), is(true));
@@ -191,6 +233,46 @@ final class DesktopAppTest extends ApplicationTest {
     @Test
     void shellRootLoadsStylesheetsFromFxml() {
         assertThat("Expected shell root to load stylesheets directly from FXML", lookup("#shellRoot").queryAs(Parent.class).getStylesheets().size(), is(3));
+    }
+
+    @Test
+    void connectButtonShowsVisibleKeyboardFocusBorder() {
+        Button button = lookup("#connectButton").queryAs(Button.class);
+        interact(button::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected connect button focus border to use visible warning accent", borderColor(button), is(Color.web("#ba7517")));
+    }
+
+    @Test
+    void baseUrlFieldShowsVisibleKeyboardFocusBorder() {
+        clickOn("#connectButton");
+        waitForCondition(() -> lookup("#loginOverlay").query().isVisible());
+        TextField field = lookup("#baseUrlField").queryAs(TextField.class);
+        interact(field::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected base URL field focus border to use visible warning accent", borderColor(field), is(Color.web("#ba7517")));
+    }
+
+    @Test
+    void signalChipTextMaintainsReadableContrastAcrossAllQualities() {
+        List<String> failures = new ArrayList<>();
+        checkContrast("No signal", Color.web("#8d2f2f"), compositeOnWhite(Color.web("#e24b4a"), 0.18d), 4.5d, failures);
+        checkContrast("Poor", Color.web("#9a5050"), Color.web("#fde9e9"), 4.5d, failures);
+        checkContrast("Fair", Color.web("#633806"), Color.web("#faeeda"), 4.5d, failures);
+        checkContrast("Good", Color.web("#4d6a2d"), Color.web("#eff7e2"), 4.5d, failures);
+        checkContrast("Excellent", Color.web("#27500a"), Color.web("#eaf3de"), 4.5d, failures);
+        assertTrue(failures.isEmpty(), "Expected signal chip text contrast to remain readable for every quality level; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void rsrpQualityUsesTextLabelsAndDescriptionsNotColorOnly() {
+        List<String> failures = new ArrayList<>();
+        checkRsrpNonColorCue(-120, "No signal", "Connection unusable or dropped", failures);
+        checkRsrpNonColorCue(-105, "Poor", "Drops likely, very slow speeds", failures);
+        checkRsrpNonColorCue(-95, "Fair", "Usable but inconsistent", failures);
+        checkRsrpNonColorCue(-85, "Good", "Reliable for most tasks", failures);
+        checkRsrpNonColorCue(-70, "Excellent", "Strong, stable, fast speeds", failures);
+        assertTrue(failures.isEmpty(), "Expected RSRP to communicate quality with text labels and captions; mismatches: " + String.join(", ", failures));
     }
 
     @Test
@@ -453,6 +535,10 @@ final class DesktopAppTest extends ApplicationTest {
         return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", rsrp + "dBm/-", "-78dBm/-", "-10dB/-", "10dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
     }
 
+    private CommonDashboard commonWithMetrics(String networkType, String runningTime, int rsrp, int rssi, int rsrq, int sinr) {
+        return new CommonDashboard(networkType, "SIM", "AT", "2.4 GHz Wi-Fi", "5 GHz Wi-Fi", "LAN2", rsrp + "dBm/-", rssi + "dBm/-", rsrq + "dB/-", sinr + "dB/-", "475+475/-", "124+1351/-", "10.129.71.22", "4E:E4:E8:D6:57:2A", "102.216.71.102", "8.8.8.8", "-", "-", "-", runningTime, "4.15.6", "All Direction");
+    }
+
     private double expectedRsrpFillLength(int rsrp) {
         double clamped = Math.max(-140d, Math.min(-44d, rsrp));
         double ratio = (clamped + 140d) / 96d;
@@ -550,7 +636,7 @@ final class DesktopAppTest extends ApplicationTest {
             return Color.web("#633806");
         }
         if (rsrp <= -80) {
-            return Color.web("#5e7f38");
+            return Color.web("#4d6a2d");
         }
         return Color.web("#27500A");
     }
@@ -568,6 +654,112 @@ final class DesktopAppTest extends ApplicationTest {
 
     private boolean hasTone(Arc arc, String tone) {
         return arc.getStyleClass().contains(tone);
+    }
+
+    private void checkMetricChip(String metric, String expectedText, String expectedTone, Label chip, List<String> failures) {
+        if (!expectedText.equals(chip.getText())) {
+            failures.add(metric + " expected chip text " + expectedText + " but was " + chip.getText());
+        }
+        if (!chip.getStyleClass().contains(expectedTone)) {
+            failures.add(metric + " expected chip tone " + expectedTone + " but had " + chip.getStyleClass());
+        }
+    }
+
+    private void checkMetricRangeFill(String metric, String expectedTone, Region fill, List<String> failures) {
+        if (!fill.getStyleClass().contains(expectedTone)) {
+            failures.add(metric + " expected range fill tone " + expectedTone + " but had " + fill.getStyleClass());
+        }
+    }
+
+    private void checkRsrpNonColorCue(int rsrp, String expectedLabel, String expectedCaption, List<String> failures) {
+        commonResult = () -> new Result.Success<>(commonWithRsrp("4G+", "18:13:29", rsrp));
+        clickOn("#refreshButton");
+        WaitForAsyncUtils.waitForFxEvents();
+        Label chip = lookup("#signalChipText").queryAs(Label.class);
+        Label caption = lookup("#signalHeroCaption").queryAs(Label.class);
+        if (!expectedLabel.equals(chip.getText())) {
+            failures.add(rsrp + " expected non-color quality label " + expectedLabel + " but was " + chip.getText());
+        }
+        if (!expectedCaption.equals(caption.getText())) {
+            failures.add(rsrp + " expected non-color quality caption " + expectedCaption + " but was " + caption.getText());
+        }
+    }
+
+    private void checkMetricRangeGeometry(String metric, double expectedRatio, AnchorPane track, Region fill, List<String> failures) {
+        var trackBounds = track.getBoundsInLocal();
+        var fillBounds = fill.getBoundsInParent();
+        var trackWidth = trackBounds.getWidth();
+        var trackHeight = trackBounds.getHeight();
+        var fillWidth = fillBounds.getWidth();
+        var fillHeight = fillBounds.getHeight();
+
+        if (trackWidth <= 0d || trackHeight <= 0d) {
+            failures.add(metric + " expected positive track dimensions but got width=" + trackWidth + ", height=" + trackHeight);
+            return;
+        }
+
+        var expectedWidth = trackWidth * expectedRatio;
+        if (Math.abs(fillWidth - expectedWidth) > 2d) {
+            failures.add(metric + " expected fill width " + expectedWidth + " but was " + fillWidth);
+        }
+        if (Math.abs(fillHeight - trackHeight) > 1d) {
+            failures.add(metric + " expected fill height " + trackHeight + " but was " + fillHeight);
+        }
+        if (expectedRatio < 0.99d && fillWidth >= trackWidth - 1d) {
+            failures.add(metric + " expected partial fill below full track width but got fill=" + fillWidth + " track=" + trackWidth);
+        }
+    }
+
+    private double normalizedRatio(double value, double min, double max) {
+        var clamped = Math.max(min, Math.min(max, value));
+        return (clamped - min) / (max - min);
+    }
+
+    private Color borderColor(Control control) {
+        var border = control.getBorder();
+        if (border == null || border.getStrokes().isEmpty()) {
+            return Color.TRANSPARENT;
+        }
+        var stroke = border.getStrokes().getFirst().getTopStroke();
+        if (stroke instanceof Color color) {
+            return color;
+        }
+        return Color.TRANSPARENT;
+    }
+
+    private void checkContrast(String quality, Color foreground, Color background, double minimum, List<String> failures) {
+        var ratio = contrastRatio(foreground, background);
+        if (ratio < minimum) {
+            failures.add(quality + " contrast ratio " + ratio + " below minimum " + minimum);
+        }
+    }
+
+    private double contrastRatio(Color left, Color right) {
+        var first = relativeLuminance(left);
+        var second = relativeLuminance(right);
+        var lighter = Math.max(first, second);
+        var darker = Math.min(first, second);
+        return (lighter + 0.05d) / (darker + 0.05d);
+    }
+
+    private double relativeLuminance(Color color) {
+        return 0.2126d * linearize(color.getRed())
+          + 0.7152d * linearize(color.getGreen())
+          + 0.0722d * linearize(color.getBlue());
+    }
+
+    private double linearize(double channel) {
+        if (channel <= 0.03928d) {
+            return channel / 12.92d;
+        }
+        return Math.pow((channel + 0.055d) / 1.055d, 2.4d);
+    }
+
+    private Color compositeOnWhite(Color color, double alpha) {
+        var red = color.getRed() * alpha + (1d - alpha);
+        var green = color.getGreen() * alpha + (1d - alpha);
+        var blue = color.getBlue() * alpha + (1d - alpha);
+        return new Color(red, green, blue, 1d);
     }
 
     private RouterApi api() {
