@@ -1,13 +1,21 @@
 .root {
-    -fx-shell-bg: #f2f3f5;
+    -fx-shell-bg: #f0ede8;
     -fx-surface-bg: #ffffff;
-    -fx-surface-border: #d9dde2;
-    -fx-text-primary: #1f252c;
-    -fx-text-muted: #66727e;
-    -fx-accent-success: #6a9d2f;
-    -fx-accent-success-soft: #dce8cc;
-    -fx-accent-warning: #b67a1f;
-    -fx-accent-caution: #c9767f;
+    -fx-surface-subtle: #f0ede8;
+    -fx-surface-border: rgba(0, 0, 0, 0.09);
+    -fx-surface-border-strong: rgba(0, 0, 0, 0.16);
+    -fx-text-primary: #1a1a18;
+    -fx-text-secondary: #6b6b67;
+    -fx-text-muted: #a0a09a;
+    -fx-accent-success: #639922;
+    -fx-accent-success-soft: #eaf3de;
+    -fx-accent-success-ink: #27500a;
+    -fx-accent-warning: #ba7517;
+    -fx-accent-warning-soft: #faeeda;
+    -fx-accent-warning-ink: #633806;
+    -fx-accent-caution: #e24b4a;
+    -fx-card-radius: 16px;
+    -fx-card-radius-small: 10px;
     -fx-font-family: 'Geist Regular';
     -fx-font-mono: 'JetBrains Mono Regular'
 }
@@ -17,19 +25,19 @@
 .text-field, .password-field {
     -fx-background-color: #ffffff;
     -fx-background-radius: 10px;
-    -fx-border-color: #ccd2d8;
+    -fx-border-color: -fx-surface-border-strong;
     -fx-border-radius: 10px;
     -fx-padding: 8 10 8 10
 }
 .button {
     -fx-background-color: #ffffff;
     -fx-background-radius: 10px;
-    -fx-border-color: #bac1c8;
+    -fx-border-color: -fx-surface-border-strong;
     -fx-border-radius: 10px;
     -fx-padding: 8 14 8 14;
     -fx-font-family: 'Geist SemiBold'
 }
 .button:hover {
-    -fx-background-color: -fx-accent-success-soft;
-    -fx-border-color: -fx-accent-success
+    -fx-background-color: -fx-surface-subtle;
+    -fx-border-color: -fx-surface-border-strong
 }

@@ -2,18 +2,33 @@ package com.github.idelstak.routerfx.shell.app;
 
 import com.github.idelstak.routerfx.shared.value.*;
 import java.util.*;
+import java.util.regex.*;
 import java.util.function.*;
 import javafx.beans.binding.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.shape.*;
 
 public final class DashboardView {
 
     private static final String NOTE_SUCCESS = "note-success";
     private static final String NOTE_WARNING = "note-warning";
     private static final String NOTE_CAUTION = "note-caution";
+    private static final double RSRP_MIN = -140d;
+    private static final double RSRP_MAX = -44d;
+    private static final double RSRP_SWEEP = 180d;
+    private static final String RSRP_TONE_NO_SIGNAL = "signal-gauge-tone-nosignal";
+    private static final String RSRP_TONE_POOR = "signal-gauge-tone-poor";
+    private static final String RSRP_TONE_FAIR = "signal-gauge-tone-fair";
+    private static final String RSRP_TONE_GOOD = "signal-gauge-tone-good";
+    private static final String RSRP_TONE_EXCELLENT = "signal-gauge-tone-excellent";
+    private static final String CHIP_TONE_NO_SIGNAL = "signal-chip-tone-nosignal";
+    private static final String CHIP_TONE_POOR = "signal-chip-tone-poor";
+    private static final String CHIP_TONE_FAIR = "signal-chip-tone-fair";
+    private static final String CHIP_TONE_GOOD = "signal-chip-tone-good";
+    private static final String CHIP_TONE_EXCELLENT = "signal-chip-tone-excellent";
     private final FxStore fxStore;
     @FXML
     private BorderPane shellRoot;
@@ -58,11 +73,15 @@ public final class DashboardView {
     private Label wifi5Value;
     private Label lanValue;
     private Label rsrpValue;
+    private HBox signalChip;
+    private Label signalChipText;
+    private Label signalHeroCaption;
+    private Arc rsrpGaugeFill;
     private Label rssiValue;
     private Label rsrqValue;
     private Label sinrValue;
-    private Label pciValue;
-    private Label earfcnValue;
+    private Label pciMirrorValue;
+    private Label earfcnMirrorValue;
     private Label ipValue;
     private Label wanMacValue;
     private Label primaryDnsValue;
@@ -111,11 +130,15 @@ public final class DashboardView {
         wifi5Value = requiredLabel(topStatusCard, "wifi5Value");
         lanValue = requiredLabel(topStatusCard, "lanValue");
         rsrpValue = requiredLabel(signalCard, "rsrpValue");
+        signalChip = requiredHBox(signalCard, "signalChip");
+        signalChipText = requiredLabel(signalCard, "signalChipText");
+        signalHeroCaption = requiredLabel(signalCard, "signalHeroCaption");
+        rsrpGaugeFill = requiredArc(signalCard, "rsrpGaugeFill");
         rssiValue = requiredLabel(signalCard, "rssiValue");
         rsrqValue = requiredLabel(signalCard, "rsrqValue");
         sinrValue = requiredLabel(signalCard, "sinrValue");
-        pciValue = requiredLabel(signalCard, "pciValue");
-        earfcnValue = requiredLabel(signalCard, "earfcnValue");
+        pciMirrorValue = requiredLabel(networkPathCard, "pciMirrorValue");
+        earfcnMirrorValue = requiredLabel(networkPathCard, "earfcnMirrorValue");
         ipValue = requiredLabel(networkPathCard, "ipValue");
         wanMacValue = requiredLabel(networkPathCard, "wanMacValue");
         primaryDnsValue = requiredLabel(networkPathCard, "primaryDnsValue");
@@ -151,12 +174,12 @@ public final class DashboardView {
         bindCommon(wifi5Value, CommonDashboard::wifi5);
         bindCommon(lanValue, CommonDashboard::lan);
 
-        bindCommon(rsrpValue, CommonDashboard::rsrp);
-        bindCommon(rssiValue, CommonDashboard::rssi);
-        bindCommon(rsrqValue, CommonDashboard::rsrq);
-        bindCommon(sinrValue, CommonDashboard::sinr);
-        bindCommon(pciValue, CommonDashboard::pci);
-        bindCommon(earfcnValue, CommonDashboard::earfcn);
+        bindCommonMetricValue(rsrpValue, CommonDashboard::rsrp);
+        bindCommonMetricValue(rssiValue, CommonDashboard::rssi);
+        bindCommonMetricValue(rsrqValue, CommonDashboard::rsrq);
+        bindCommonMetricValue(sinrValue, CommonDashboard::sinr);
+        bindCommon(pciMirrorValue, CommonDashboard::pci);
+        bindCommon(earfcnMirrorValue, CommonDashboard::earfcn);
 
         bindCommon(ipValue, CommonDashboard::ip);
         bindCommon(wanMacValue, CommonDashboard::wanMac);
@@ -180,11 +203,18 @@ public final class DashboardView {
         bindStatusBar(statusNetworkTypeValue, StatusBarState::networkType);
         bindStatusBar(statusSimValue, StatusBarState::sim);
         bindStatusBar(statusSmsValue, StatusBarState::smsUnread);
+        rsrpValue.textProperty().addListener((_, _, value) -> applyRsrpGauge(value));
+        applyRsrpGauge(rsrpValue.getText());
     }
 
     private void bindCommon(Label label, Function<CommonDashboard, String> projector) {
         label.textProperty().bind(stringValue(state ->
           state.dashboard().common().map(projector).orElse("-")));
+    }
+
+    private void bindCommonMetricValue(Label label, Function<CommonDashboard, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().common().map(projector).map(this::formatDualMetricValue).orElse("-/-")));
     }
 
     private void bindRadio(Label label, Function<RadioState, String> projector) {
@@ -258,6 +288,20 @@ public final class DashboardView {
           .orElseThrow(() -> new IllegalStateException("Missing label: " + id));
     }
 
+    private Arc requiredArc(Parent root, String id) {
+        return findById(root, id)
+          .filter(Arc.class::isInstance)
+          .map(Arc.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing arc: " + id));
+    }
+
+    private HBox requiredHBox(Parent root, String id) {
+        return findById(root, id)
+          .filter(HBox.class::isInstance)
+          .map(HBox.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing hbox: " + id));
+    }
+
     private Optional<Node> findById(Node node, String id) {
         if (id.equals(node.getId())) {
             return Optional.of(node);
@@ -275,6 +319,182 @@ public final class DashboardView {
 
     private String safe(String value) {
         return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String formatDualMetricValue(String value) {
+        if (value == null || value.isBlank()) {
+            return "-/-";
+        }
+        var parts = value.split("/", -1);
+        var fourG = normalizeMetricPart(parts.length > 0 ? parts[0] : "-");
+        var fiveG = normalizeMetricPart(parts.length > 1 ? parts[1] : "-");
+        return fourG + "/" + fiveG;
+    }
+
+    private String normalizeMetricPart(String value) {
+        if (value == null || value.isBlank()) {
+            return "-";
+        }
+        var normalized = value.trim()
+          .replaceAll("(?i)\\s*dBm\\s*$", "")
+          .replaceAll("(?i)\\s*dB\\s*$", "")
+          .trim();
+        return normalized.isBlank() ? "-" : normalized;
+    }
+
+    private void applyRsrpGauge(String text) {
+        if (rsrpGaugeFill == null) {
+            return;
+        }
+        parseRsrp(text)
+          .ifPresentOrElse(
+            value -> {
+                applyRsrpFillLength(value);
+                applyRsrpTone(value);
+                applySignalChipTone(value);
+                applySignalChipText(value);
+                applySignalHeroCaption(value);
+            },
+            () -> {
+                applyRsrpFillLength(RSRP_MIN);
+                applyRsrpTone(RSRP_MIN);
+                applySignalChipTone(RSRP_MIN);
+                applySignalChipText(RSRP_MIN);
+                applySignalHeroCaption(RSRP_MIN);
+            }
+          );
+    }
+
+    private Optional<Double> parseRsrp(String text) {
+        if (text == null || text.isBlank()) {
+            return Optional.empty();
+        }
+        var normalized = text.replace('\u2212', '-');
+        var matcher = Pattern.compile("-?\\d+(\\.\\d+)?").matcher(normalized);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Double.valueOf(matcher.group()));
+        } catch (NumberFormatException issue) {
+            return Optional.empty();
+        }
+    }
+
+    private void applyRsrpFillLength(double value) {
+        var clamped = Math.max(RSRP_MIN, Math.min(RSRP_MAX, value));
+        var ratio = (clamped - RSRP_MIN) / (RSRP_MAX - RSRP_MIN);
+        var constrainedRatio = Math.max(0d, Math.min(1d, ratio));
+        rsrpGaugeFill.setLength(-1d * constrainedRatio * RSRP_SWEEP);
+    }
+
+    private void applyRsrpTone(double value) {
+        String tone = rsrpToneClass(value);
+        applyRsrpTone(rsrpGaugeFill, tone);
+    }
+
+    private void applyRsrpTone(Arc zone, String tone) {
+        zone.getStyleClass().removeAll(
+          RSRP_TONE_NO_SIGNAL,
+          RSRP_TONE_POOR,
+          RSRP_TONE_FAIR,
+          RSRP_TONE_GOOD,
+          RSRP_TONE_EXCELLENT
+        );
+        zone.getStyleClass().add(tone);
+    }
+
+    private String rsrpToneClass(double value) {
+        if (value <= -110d) {
+            return RSRP_TONE_NO_SIGNAL;
+        }
+        if (value <= -100d) {
+            return RSRP_TONE_POOR;
+        }
+        if (value <= -90d) {
+            return RSRP_TONE_FAIR;
+        }
+        if (value <= -80d) {
+            return RSRP_TONE_GOOD;
+        }
+        return RSRP_TONE_EXCELLENT;
+    }
+
+    private void applySignalHeroCaption(double value) {
+        if (signalHeroCaption == null) {
+            return;
+        }
+        signalHeroCaption.setText(rsrpDescription(value));
+    }
+
+    private void applySignalChipText(double value) {
+        if (signalChipText == null) {
+            return;
+        }
+        signalChipText.setText(rsrpQuality(value));
+    }
+
+    private void applySignalChipTone(double value) {
+        if (signalChip == null) {
+            return;
+        }
+        var tone = rsrpChipToneClass(value);
+        signalChip.getStyleClass().removeAll(
+          CHIP_TONE_NO_SIGNAL,
+          CHIP_TONE_POOR,
+          CHIP_TONE_FAIR,
+          CHIP_TONE_GOOD,
+          CHIP_TONE_EXCELLENT
+        );
+        signalChip.getStyleClass().add(tone);
+    }
+
+    private String rsrpQuality(double value) {
+        if (value <= -110d) {
+            return "No signal";
+        }
+        if (value <= -100d) {
+            return "Poor";
+        }
+        if (value <= -90d) {
+            return "Fair";
+        }
+        if (value <= -80d) {
+            return "Good";
+        }
+        return "Excellent";
+    }
+
+    private String rsrpChipToneClass(double value) {
+        if (value <= -110d) {
+            return CHIP_TONE_NO_SIGNAL;
+        }
+        if (value <= -100d) {
+            return CHIP_TONE_POOR;
+        }
+        if (value <= -90d) {
+            return CHIP_TONE_FAIR;
+        }
+        if (value <= -80d) {
+            return CHIP_TONE_GOOD;
+        }
+        return CHIP_TONE_EXCELLENT;
+    }
+
+    private String rsrpDescription(double value) {
+        if (value <= -110d) {
+            return "Connection unusable or dropped";
+        }
+        if (value <= -100d) {
+            return "Drops likely, very slow speeds";
+        }
+        if (value <= -90d) {
+            return "Usable but inconsistent";
+        }
+        if (value <= -80d) {
+            return "Reliable for most tasks";
+        }
+        return "Strong, stable, fast speeds";
     }
 
     private void applyNoteTone(String note) {

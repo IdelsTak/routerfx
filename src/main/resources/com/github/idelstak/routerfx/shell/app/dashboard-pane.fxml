@@ -37,29 +37,29 @@
 
                 <VBox id="authPanel" fx:id="authenticated" styleClass="card-surface">
                   <children>
-                    <Label styleClass="card-title" text="Authenticated Dashboard" />
+                    <Label styleClass="card-title" text="AUTHENTICATED DASHBOARD" />
                     <GridPane styleClass="metrics-grid">
                       <children>
-                        <Label styleClass="metric-label" text="Operator" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label styleClass="metric-label" text="OPERATOR" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                         <Label id="operatorValue" fx:id="operatorValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                        <Label styleClass="metric-label" text="Current Band" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label styleClass="metric-label" text="CURRENT BAND" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                         <Label id="currentBandValue" fx:id="currentBandValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                        <Label styleClass="metric-label" text="Bandwidth" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <Label styleClass="metric-label" text="BANDWIDTH" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                         <Label id="bandwidthValue" fx:id="bandwidthValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                        <Label styleClass="metric-label" text="Uptime" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label styleClass="metric-label" text="UPTIME" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                         <Label id="uptimeValue" fx:id="uptimeValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                        <Label styleClass="metric-label" text="Current Traffic" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                        <Label styleClass="metric-label" text="CURRENT TRAFFIC" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                         <Label id="currentFlowValue" fx:id="currentFlowValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                       </children>
                     </GridPane>
-                    <Label styleClass="card-title" text="Status Bar" />
+                    <Label styleClass="card-title" text="STATUS BAR" />
                     <GridPane styleClass="metrics-grid">
                       <children>
-                        <Label styleClass="metric-label" text="Signal Level" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label styleClass="metric-label" text="SIGNAL LEVEL" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                         <Label id="statusSignalValue" fx:id="statusSignalValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0">
                           <styleClass>
                             <String fx:value="metric-value" />
@@ -67,13 +67,13 @@
                           </styleClass>
                         </Label>
 
-                        <Label styleClass="metric-label" text="Network Type" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label styleClass="metric-label" text="NETWORK TYPE" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                         <Label id="statusNetworkTypeValue" fx:id="statusNetworkTypeValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                         <Label styleClass="metric-label" text="SIM" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                         <Label id="statusSimValue" fx:id="statusSimValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                        <Label styleClass="metric-label" text="SMS Unread" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label styleClass="metric-label" text="SMS UNREAD" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                         <Label id="statusSmsValue" fx:id="statusSmsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                       </children>
                     </GridPane>
@@ -88,7 +88,7 @@
           <children>
             <VBox>
               <children>
-                <Label styleClass="card-title" text="Router access" />
+                <Label styleClass="card-title" text="ROUTER ACCESS" />
                 <GridPane>
                   <children>
                     <Label text="Router URL" GridPane.columnIndex="0" GridPane.rowIndex="0" />

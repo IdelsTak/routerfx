@@ -4,8 +4,8 @@
 .shell-scroll {
     -fx-background: -fx-shell-bg;
     -fx-background-color: -fx-shell-bg;
-    -fx-border-color: -fx-surface-border;
-    -fx-border-width: 1px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
     -fx-padding: 2px;
     -fx-hbar-policy: never;
     -fx-fit-to-width: true
@@ -20,24 +20,24 @@
     -fx-background-color: -fx-shell-bg
 }
 .shell-scroll .scroll-bar:vertical .track {
-    -fx-background-color: #e4e8ec;
+    -fx-background-color: #e8e3dc;
     -fx-background-radius: 8px
 }
 .shell-scroll .scroll-bar:vertical .thumb {
-    -fx-background-color: #b8c0c8;
+    -fx-background-color: #c8c2ba;
     -fx-background-radius: 8px
 }
 .shell-scroll .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: #9ca7b1
+    -fx-background-color: #aea79d
 }
 .shell-content {
     -fx-background-color: transparent;
-    -fx-spacing: 12px;
+    -fx-spacing: 10px;
     -fx-padding: 12px
 }
 .shell-header {
-    -fx-padding: 8 10 12 10;
-    -fx-spacing: 8px;
+    -fx-padding: 4 0 6 0;
+    -fx-spacing: 10px;
     -fx-alignment: center-left
 }
 .header-actions {
@@ -47,32 +47,28 @@
     -fx-spacing: 2px
 }
 .brand-title {
-    -fx-font-size: 24px;
-    -fx-font-family: "Geist Bold";
+    -fx-font-size: 15px;
+    -fx-font-family: 'Geist Medium';
     -fx-text-fill: -fx-text-primary
 }
 .brand-subtitle {
-    -fx-font-size: 13px;
-    -fx-font-family: "Geist SemiBold";
+    -fx-font-size: 11px;
+    -fx-font-family: 'Geist Regular';
     -fx-text-fill: -fx-text-muted
 }
 .card-surface {
     -fx-background-color: -fx-surface-bg;
-    -fx-background-radius: 22px;
+    -fx-background-radius: 16px;
     -fx-border-color: -fx-surface-border;
-    -fx-border-width: 1px;
-    -fx-border-radius: 22px;
-    -fx-padding: 14 16 14 16;
-    -fx-spacing: 10px;
-    -fx-effect: dropshadow(gaussian, rgba(22, 28, 34, 0.08), 14, 0.1, 0, 3)
-}
-.login-strip {
-    -fx-spacing: 8px
+    -fx-border-width: 0.5px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16 24 16 24;
+    -fx-spacing: 10px
 }
 .login-overlay {
     -fx-alignment: center;
     -fx-fill-width: true;
-    -fx-background-color: rgba(16, 22, 28, 0.36);
+    -fx-background-color: rgba(26, 26, 24, 0.26);
     -fx-padding: 24px
 }
 .login-card {
@@ -103,90 +99,102 @@
     -fx-vgap: 8px
 }
 .path-row {
-    -fx-spacing: 8px;
+    -fx-spacing: 10px;
     -fx-alignment: center-left
 }
 .path-node {
     -fx-padding: 6 10 6 10;
-    -fx-background-radius: 10px;
-    -fx-border-radius: 10px;
-    -fx-font-family: "Geist SemiBold";
-    -fx-font-size: 11px
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-border-width: 0.5px;
+    -fx-font-family: 'Geist Medium';
+    -fx-font-size: 10px
 }
 .path-link {
-    -fx-font-family: "JetBrains Mono Regular";
-    -fx-font-size: 12px
+    -fx-font-family: 'JetBrains Mono Regular';
+    -fx-font-size: 11px
 }
 .path-node-active {
     -fx-background-color: -fx-accent-success-soft;
     -fx-border-color: -fx-accent-success;
-    -fx-text-fill: #2d5510
+    -fx-text-fill: -fx-accent-success-ink
 }
 .path-node-inactive {
-    -fx-background-color: #eef1f4;
-    -fx-border-color: #ccd2d8;
-    -fx-text-fill: #6c7680
+    -fx-background-color: -fx-surface-subtle;
+    -fx-border-color: -fx-surface-border;
+    -fx-text-fill: -fx-text-muted
 }
 .path-node-fallback {
-    -fx-background-color: #f0e5d1;
+    -fx-background-color: -fx-accent-warning-soft;
     -fx-border-color: -fx-accent-warning;
-    -fx-text-fill: #7a4a00
+    -fx-text-fill: -fx-accent-warning-ink
 }
 .path-link-active {
     -fx-text-fill: -fx-accent-success
 }
 .path-link-inactive {
-    -fx-text-fill: #a8b0b8
+    -fx-text-fill: -fx-text-muted;
+    -fx-opacity: 0.65
 }
 .path-link-fallback {
-    -fx-text-fill: -fx-accent-warning
+    -fx-text-fill: -fx-accent-warning;
+    -fx-opacity: 0.82
 }
 .card-title {
-    -fx-font-size: 12px;
-    -fx-font-family: "Geist Bold";
-    -fx-text-fill: -fx-text-muted;
-    -fx-letter-spacing: 0.08em
+    -fx-font-size: 10px;
+    -fx-font-family: 'Geist Medium';
+    -fx-text-fill: -fx-text-muted
 }
 #connectButton {
-    -fx-background-color: -fx-accent-success;
-    -fx-text-fill: #ffffff;
-    -fx-border-color: -fx-accent-success
+    -fx-background-color: -fx-text-primary;
+    -fx-text-fill: -fx-surface-bg;
+    -fx-border-color: transparent;
+    -fx-font-family: 'Geist Medium'
 }
 #connectButton:hover {
-    -fx-background-color: #5a8a28;
-    -fx-border-color: #5a8a28
+    -fx-opacity: 0.84
 }
-#connectButton:focused,
-#refreshButton:focused,
-.text-field:focused,
-.password-field:focused {
+#connectButton:pressed {
+    -fx-opacity: 0.7
+}
+#refreshButton {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-surface-border-strong;
+    -fx-text-fill: -fx-text-secondary;
+    -fx-font-family: 'Geist Regular'
+}
+#refreshButton:hover {
+    -fx-background-color: -fx-surface-subtle;
+    -fx-text-fill: -fx-text-primary
+}
+#connectButton:focused, #refreshButton:focused, .text-field:focused, .password-field:focused {
     -fx-border-color: -fx-accent-warning;
-    -fx-border-width: 2px
+    -fx-border-width: 1.5px
 }
 .metric-label {
     -fx-text-fill: -fx-text-muted;
-    -fx-font-size: 12px
+    -fx-font-size: 10px;
+    -fx-font-family: 'Geist Regular'
 }
 .metric-icon {
-    -fx-background-color: #eef1f4;
-    -fx-border-color: #ccd2d8;
-    -fx-background-radius: 6px;
-    -fx-border-radius: 6px;
+    -fx-background-color: -fx-surface-subtle;
+    -fx-border-color: -fx-surface-border;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-border-width: 0.5px;
     -fx-padding: 2 6 2 6;
-    -fx-font-family: "Geist SemiBold";
+    -fx-font-family: 'Geist Medium';
     -fx-font-size: 10px;
-    -fx-text-fill: #59636d
+    -fx-text-fill: -fx-text-secondary
 }
 .metric-value {
-    -fx-font-size: 13px;
-    -fx-font-family: "JetBrains Mono SemiBold"
+    -fx-font-size: 12px;
+    -fx-font-family: 'JetBrains Mono Medium'
 }
-.status-strip-grid .metric-label,
-.footer-grid .metric-label {
-    -fx-font-size: 11px
+.status-strip-grid .metric-label, .footer-grid .metric-label {
+    -fx-font-size: 10px
 }
-.status-strip-grid .metric-value,
-.footer-grid .metric-value {
+.status-strip-grid .metric-value, .footer-grid .metric-value {
     -fx-font-size: 12px
 }
 .metric-value.metric-success {
@@ -200,18 +208,268 @@
 }
 .note-label {
     -fx-background-radius: 999;
-    -fx-font-family: "Geist Bold";
+    -fx-font-family: 'Geist Medium';
     -fx-padding: 4 10 4 10
 }
 .note-label.note-success {
     -fx-background-color: -fx-accent-success-soft;
-    -fx-text-fill: #305a10
+    -fx-text-fill: -fx-accent-success-ink
 }
 .note-label.note-warning {
-    -fx-background-color: #f0e5d1;
-    -fx-text-fill: #7a4a00
+    -fx-background-color: -fx-accent-warning-soft;
+    -fx-text-fill: -fx-accent-warning-ink
 }
 .note-label.note-caution {
-    -fx-background-color: #f4dee1;
-    -fx-text-fill: #8d2f3a
+    -fx-background-color: rgba(226, 75, 74, 0.18);
+    -fx-text-fill: #8d2f2f
+}
+.signal-layout {
+    -fx-alignment: center-left;
+    -fx-spacing: 28px
+}
+.signal-hero {
+    -fx-alignment: center;
+    -fx-min-width: 330px;
+    -fx-spacing: 10px;
+    -fx-padding: 0 16 32 0
+}
+.signal-gauge {
+    -fx-min-width: 280px;
+    -fx-max-width: 280px;
+    -fx-alignment: center
+}
+.signal-gauge-core {
+    -fx-background-color: -fx-surface-bg;
+    -fx-background-radius: 999px;
+    -fx-min-width: 170px;
+    -fx-min-height: 170px;
+    -fx-max-width: 170px;
+    -fx-max-height: 170px;
+    -fx-alignment: center;
+    -fx-spacing: 6px
+}
+.signal-gauge-track, .signal-gauge-fill {
+    -fx-fill: transparent;
+    -fx-stroke-width: 12px;
+    -fx-stroke-line-cap: round;
+    -fx-opacity: 0.9
+}
+.signal-gauge-track {
+    -fx-stroke: #d9d9d4
+}
+.signal-gauge-fill {
+    -fx-stroke: #639922
+}
+.signal-gauge-tone-nosignal {
+    -fx-stroke: #e24b4a
+}
+.signal-gauge-tone-poor {
+    -fx-stroke: #f09595
+}
+.signal-gauge-tone-fair {
+    -fx-stroke: #ef9f27
+}
+.signal-gauge-tone-good {
+    -fx-stroke: #c0dd97
+}
+.signal-gauge-tone-excellent {
+    -fx-stroke: #639922
+}
+.signal-gauge-title {
+    -fx-font-size: 12px;
+    -fx-font-family: 'Geist Regular';
+    -fx-text-fill: -fx-text-muted
+}
+.signal-gauge-value {
+    -fx-font-size: 24px;
+    -fx-font-family: 'JetBrains Mono Medium';
+    -fx-text-fill: -fx-text-primary
+}
+.signal-gauge-unit {
+    -fx-font-size: 13px;
+    -fx-font-family: 'Geist Regular';
+    -fx-text-fill: -fx-text-muted
+}
+.signal-chip {
+    -fx-background-radius: 999px;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-family: 'Geist Medium';
+    -fx-alignment: center;
+    -fx-spacing: 4px
+}
+.signal-chip-dot {
+    -fx-font-size: 8px
+}
+.signal-chip-text {
+    -fx-font-size: 11px;
+    -fx-font-family: 'Geist Medium'
+}
+.signal-chip-tone-nosignal {
+    -fx-background-color: rgba(226, 75, 74, 0.18)
+}
+.signal-chip-tone-nosignal .signal-chip-dot {
+    -fx-text-fill: #e24b4a
+}
+.signal-chip-tone-nosignal .signal-chip-text {
+    -fx-text-fill: #8d2f2f
+}
+.signal-chip-tone-poor {
+    -fx-background-color: #fde9e9
+}
+.signal-chip-tone-poor .signal-chip-dot {
+    -fx-text-fill: #f09595
+}
+.signal-chip-tone-poor .signal-chip-text {
+    -fx-text-fill: #9a5050
+}
+.signal-chip-tone-fair {
+    -fx-background-color: -fx-accent-warning-soft
+}
+.signal-chip-tone-fair .signal-chip-dot {
+    -fx-text-fill: #ef9f27
+}
+.signal-chip-tone-fair .signal-chip-text {
+    -fx-text-fill: -fx-accent-warning-ink
+}
+.signal-chip-tone-good {
+    -fx-background-color: #eff7e2
+}
+.signal-chip-tone-good .signal-chip-dot {
+    -fx-text-fill: #c0dd97
+}
+.signal-chip-tone-good .signal-chip-text {
+    -fx-text-fill: #5e7f38
+}
+.signal-chip-tone-excellent {
+    -fx-background-color: -fx-accent-success-soft
+}
+.signal-chip-tone-excellent .signal-chip-dot {
+    -fx-text-fill: #639922
+}
+.signal-chip-tone-excellent .signal-chip-text {
+    -fx-text-fill: -fx-accent-success-ink
+}
+.signal-hero-note {
+    -fx-alignment: center;
+    -fx-spacing: 12px;
+    -fx-translate-y: -25px
+}
+.signal-hero-caption {
+    -fx-font-size: 11px;
+    -fx-font-family: 'Geist Regular';
+    -fx-text-fill: -fx-text-muted;
+    -fx-alignment: center;
+    -fx-text-alignment: center
+}
+.signal-divider {
+    -fx-background-color: -fx-surface-border;
+    -fx-min-width: 0.5px;
+    -fx-pref-width: 0.5px;
+    -fx-max-width: 0.5px;
+    -fx-min-height: 320px
+}
+.signal-gauge-scale {
+    -fx-min-width: 260px;
+    -fx-max-width: 260px;
+    -fx-alignment: center-left;
+    -fx-translate-y: -43px
+}
+.signal-metrics {
+    -fx-spacing: 14px;
+    -fx-fill-width: true
+}
+.metric-block {
+    -fx-spacing: 6px
+}
+.metric-head {
+    -fx-alignment: baseline-left;
+    -fx-spacing: 8px
+}
+.metric-block-title {
+    -fx-font-size: 12px;
+    -fx-font-family: 'Geist Medium';
+    -fx-text-fill: -fx-text-secondary
+}
+.metric-block-subtitle {
+    -fx-font-size: 10px;
+    -fx-font-family: 'Geist Regular';
+    -fx-text-fill: -fx-text-muted
+}
+.metric-value-wrap {
+    -fx-spacing: 3px;
+    -fx-alignment: baseline-left
+}
+.metric-block-value {
+    -fx-font-size: 24px;
+    -fx-font-family: 'JetBrains Mono Medium';
+    -fx-text-fill: -fx-text-primary
+}
+.metric-block-unit {
+    -fx-font-size: 11px;
+    -fx-font-family: 'Geist Regular';
+    -fx-text-fill: -fx-text-muted
+}
+.metric-chip-warning {
+    -fx-background-color: -fx-accent-warning-soft;
+    -fx-text-fill: -fx-accent-warning-ink
+}
+.metric-range {
+    -fx-spacing: 2px;
+    -fx-alignment: center-left
+}
+.metric-range-seg {
+    -fx-pref-height: 6px;
+    -fx-background-radius: 99px
+}
+.metric-range-green {
+    -fx-background-color: -fx-accent-success
+}
+.metric-range-green-soft {
+    -fx-background-color: rgba(99, 153, 34, 0.35)
+}
+.metric-range-amber {
+    -fx-background-color: -fx-accent-warning
+}
+.metric-range-amber-soft {
+    -fx-background-color: rgba(186, 117, 23, 0.35)
+}
+.metric-range-red-soft {
+    -fx-background-color: rgba(226, 75, 74, 0.35)
+}
+.metric-range-labels {
+    -fx-alignment: center-left;
+    -fx-spacing: 14px
+}
+.range-label {
+    -fx-font-size: 9px;
+    -fx-font-family: 'JetBrains Mono Regular';
+    -fx-text-fill: -fx-text-muted
+}
+.range-label-active {
+    -fx-font-family: 'Geist Medium';
+    -fx-text-fill: -fx-accent-warning-ink
+}
+.metric-separator {
+    -fx-min-height: 0.5px;
+    -fx-pref-height: 0.5px;
+    -fx-max-height: 0.5px;
+    -fx-background-color: -fx-surface-border
+}
+.network-summary {
+    -fx-padding: 12 0 0 0;
+    -fx-border-color: -fx-surface-border transparent transparent transparent;
+    -fx-border-width: 0.5px 0 0 0;
+    -fx-alignment: center-left;
+    -fx-spacing: 8px
+}
+.network-summary-text {
+    -fx-font-size: 12px;
+    -fx-font-family: 'Geist Medium';
+    -fx-text-fill: -fx-accent-success-ink
+}
+.network-summary-meta {
+    -fx-font-size: 11px;
+    -fx-font-family: 'JetBrains Mono Regular';
+    -fx-text-fill: -fx-text-muted
 }

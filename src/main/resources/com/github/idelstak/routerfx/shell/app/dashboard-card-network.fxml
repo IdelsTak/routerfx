@@ -6,7 +6,7 @@
 
 <VBox id="networkPathCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
   <children>
-    <Label styleClass="card-title" text="Network path" />
+    <Label styleClass="card-title" text="NETWORK" />
     <HBox styleClass="path-row">
       <children>
         <Label id="routerPathNode" fx:id="routerPathNode" text="ROUTER">
@@ -15,7 +15,7 @@
             <String fx:value="path-node-active" />
           </styleClass>
         </Label>
-        <Label id="primaryDnsLink" fx:id="primaryDnsLink" text="----">
+        <Label id="primaryDnsLink" fx:id="primaryDnsLink" text="------">
           <styleClass>
             <String fx:value="path-link" />
             <String fx:value="path-link-active" />
@@ -27,7 +27,7 @@
             <String fx:value="path-node-active" />
           </styleClass>
         </Label>
-        <Label id="secondaryDnsLink" fx:id="secondaryDnsLink" text="----">
+        <Label id="secondaryDnsLink" fx:id="secondaryDnsLink" text="- - - -">
           <styleClass>
             <String fx:value="path-link" />
             <String fx:value="path-link-fallback" />
@@ -39,7 +39,7 @@
             <String fx:value="path-node-active" />
           </styleClass>
         </Label>
-        <Label text="....">
+        <Label text="- - -">
           <styleClass>
             <String fx:value="path-link" />
             <String fx:value="path-link-inactive" />
@@ -61,21 +61,31 @@
         <Label styleClass="metric-label" text="WAN MAC" GridPane.columnIndex="0" GridPane.rowIndex="1" />
         <Label id="wanMacValue" fx:id="wanMacValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-        <Label styleClass="metric-label" text="Primary DNS" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label styleClass="metric-label" text="PRIMARY DNS" GridPane.columnIndex="0" GridPane.rowIndex="2" />
         <Label id="primaryDnsValue" fx:id="primaryDnsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-        <Label styleClass="metric-label" text="Secondary DNS" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label styleClass="metric-label" text="SECONDARY DNS" GridPane.columnIndex="0" GridPane.rowIndex="3" />
         <Label id="secondaryDnsValue" fx:id="secondaryDnsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-        <Label styleClass="metric-label" text="IPv6" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <Label styleClass="metric-label" text="IPV6" GridPane.columnIndex="0" GridPane.rowIndex="4" />
         <Label id="ipv6Value" fx:id="ipv6Value" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-        <Label styleClass="metric-label" text="Primary IPv6 DNS" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <Label styleClass="metric-label" text="PRIMARY IPV6 DNS" GridPane.columnIndex="0" GridPane.rowIndex="5" />
         <Label id="primaryIpv6DnsValue" fx:id="primaryIpv6DnsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
-        <Label styleClass="metric-label" text="Secondary IPv6 DNS" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+        <Label styleClass="metric-label" text="SECONDARY IPV6 DNS" GridPane.columnIndex="0" GridPane.rowIndex="6" />
         <Label id="secondaryIpv6DnsValue" fx:id="secondaryIpv6DnsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="6" />
       </children>
     </GridPane>
+    <HBox styleClass="network-summary">
+      <children>
+        <Label styleClass="network-summary-text" text="Carrier aggregation active" />
+        <Pane HBox.hgrow="ALWAYS" />
+        <Label styleClass="network-summary-meta" text="PCI" />
+        <Label id="pciMirrorValue" fx:id="pciMirrorValue" styleClass="network-summary-meta" text="-" />
+        <Label styleClass="network-summary-meta" text="EARFCN" />
+        <Label id="earfcnMirrorValue" fx:id="earfcnMirrorValue" styleClass="network-summary-meta" text="-" />
+      </children>
+    </HBox>
   </children>
 </VBox>
