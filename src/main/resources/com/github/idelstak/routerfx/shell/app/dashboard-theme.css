@@ -340,7 +340,7 @@
     -fx-text-fill: #c0dd97
 }
 .signal-chip-tone-good .signal-chip-text {
-    -fx-text-fill: #5e7f38
+    -fx-text-fill: #4d6a2d
 }
 .signal-chip-tone-excellent {
     -fx-background-color: -fx-accent-success-soft
@@ -428,7 +428,7 @@
 }
 .metric-chip-tone-good {
     -fx-background-color: #eff7e2;
-    -fx-text-fill: #5e7f38
+    -fx-text-fill: #4d6a2d
 }
 .metric-chip-tone-excellent {
     -fx-background-color: -fx-accent-success-soft;

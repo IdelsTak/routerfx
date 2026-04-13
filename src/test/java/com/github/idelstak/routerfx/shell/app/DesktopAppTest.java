@@ -236,6 +236,46 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void connectButtonShowsVisibleKeyboardFocusBorder() {
+        Button button = lookup("#connectButton").queryAs(Button.class);
+        interact(button::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected connect button focus border to use visible warning accent", borderColor(button), is(Color.web("#ba7517")));
+    }
+
+    @Test
+    void baseUrlFieldShowsVisibleKeyboardFocusBorder() {
+        clickOn("#connectButton");
+        waitForCondition(() -> lookup("#loginOverlay").query().isVisible());
+        TextField field = lookup("#baseUrlField").queryAs(TextField.class);
+        interact(field::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat("Expected base URL field focus border to use visible warning accent", borderColor(field), is(Color.web("#ba7517")));
+    }
+
+    @Test
+    void signalChipTextMaintainsReadableContrastAcrossAllQualities() {
+        List<String> failures = new ArrayList<>();
+        checkContrast("No signal", Color.web("#8d2f2f"), compositeOnWhite(Color.web("#e24b4a"), 0.18d), 4.5d, failures);
+        checkContrast("Poor", Color.web("#9a5050"), Color.web("#fde9e9"), 4.5d, failures);
+        checkContrast("Fair", Color.web("#633806"), Color.web("#faeeda"), 4.5d, failures);
+        checkContrast("Good", Color.web("#4d6a2d"), Color.web("#eff7e2"), 4.5d, failures);
+        checkContrast("Excellent", Color.web("#27500a"), Color.web("#eaf3de"), 4.5d, failures);
+        assertTrue(failures.isEmpty(), "Expected signal chip text contrast to remain readable for every quality level; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void rsrpQualityUsesTextLabelsAndDescriptionsNotColorOnly() {
+        List<String> failures = new ArrayList<>();
+        checkRsrpNonColorCue(-120, "No signal", "Connection unusable or dropped", failures);
+        checkRsrpNonColorCue(-105, "Poor", "Drops likely, very slow speeds", failures);
+        checkRsrpNonColorCue(-95, "Fair", "Usable but inconsistent", failures);
+        checkRsrpNonColorCue(-85, "Good", "Reliable for most tasks", failures);
+        checkRsrpNonColorCue(-70, "Excellent", "Strong, stable, fast speeds", failures);
+        assertTrue(failures.isEmpty(), "Expected RSRP to communicate quality with text labels and captions; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
     void preLoginHidesAuthenticatedPanel() {
         assertThat("Expected auth panel to remain hidden before login", lookup("#authPanel").query().isVisible(), is(false));
     }
@@ -596,7 +636,7 @@ final class DesktopAppTest extends ApplicationTest {
             return Color.web("#633806");
         }
         if (rsrp <= -80) {
-            return Color.web("#5e7f38");
+            return Color.web("#4d6a2d");
         }
         return Color.web("#27500A");
     }
@@ -631,6 +671,20 @@ final class DesktopAppTest extends ApplicationTest {
         }
     }
 
+    private void checkRsrpNonColorCue(int rsrp, String expectedLabel, String expectedCaption, List<String> failures) {
+        commonResult = () -> new Result.Success<>(commonWithRsrp("4G+", "18:13:29", rsrp));
+        clickOn("#refreshButton");
+        WaitForAsyncUtils.waitForFxEvents();
+        Label chip = lookup("#signalChipText").queryAs(Label.class);
+        Label caption = lookup("#signalHeroCaption").queryAs(Label.class);
+        if (!expectedLabel.equals(chip.getText())) {
+            failures.add(rsrp + " expected non-color quality label " + expectedLabel + " but was " + chip.getText());
+        }
+        if (!expectedCaption.equals(caption.getText())) {
+            failures.add(rsrp + " expected non-color quality caption " + expectedCaption + " but was " + caption.getText());
+        }
+    }
+
     private void checkMetricRangeGeometry(String metric, double expectedRatio, AnchorPane track, Region fill, List<String> failures) {
         var trackBounds = track.getBoundsInLocal();
         var fillBounds = fill.getBoundsInParent();
@@ -659,6 +713,53 @@ final class DesktopAppTest extends ApplicationTest {
     private double normalizedRatio(double value, double min, double max) {
         var clamped = Math.max(min, Math.min(max, value));
         return (clamped - min) / (max - min);
+    }
+
+    private Color borderColor(Control control) {
+        var border = control.getBorder();
+        if (border == null || border.getStrokes().isEmpty()) {
+            return Color.TRANSPARENT;
+        }
+        var stroke = border.getStrokes().getFirst().getTopStroke();
+        if (stroke instanceof Color color) {
+            return color;
+        }
+        return Color.TRANSPARENT;
+    }
+
+    private void checkContrast(String quality, Color foreground, Color background, double minimum, List<String> failures) {
+        var ratio = contrastRatio(foreground, background);
+        if (ratio < minimum) {
+            failures.add(quality + " contrast ratio " + ratio + " below minimum " + minimum);
+        }
+    }
+
+    private double contrastRatio(Color left, Color right) {
+        var first = relativeLuminance(left);
+        var second = relativeLuminance(right);
+        var lighter = Math.max(first, second);
+        var darker = Math.min(first, second);
+        return (lighter + 0.05d) / (darker + 0.05d);
+    }
+
+    private double relativeLuminance(Color color) {
+        return 0.2126d * linearize(color.getRed())
+          + 0.7152d * linearize(color.getGreen())
+          + 0.0722d * linearize(color.getBlue());
+    }
+
+    private double linearize(double channel) {
+        if (channel <= 0.03928d) {
+            return channel / 12.92d;
+        }
+        return Math.pow((channel + 0.055d) / 1.055d, 2.4d);
+    }
+
+    private Color compositeOnWhite(Color color, double alpha) {
+        var red = color.getRed() * alpha + (1d - alpha);
+        var green = color.getGreen() * alpha + (1d - alpha);
+        var blue = color.getBlue() * alpha + (1d - alpha);
+        return new Color(red, green, blue, 1d);
     }
 
     private RouterApi api() {

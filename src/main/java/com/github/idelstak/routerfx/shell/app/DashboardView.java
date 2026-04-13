@@ -19,27 +19,8 @@ public final class DashboardView {
     private static final double RSRP_MIN = -140d;
     private static final double RSRP_MAX = -44d;
     private static final double RSRP_SWEEP = 180d;
-    private static final String RSRP_TONE_NO_SIGNAL = "signal-gauge-tone-nosignal";
-    private static final String RSRP_TONE_POOR = "signal-gauge-tone-poor";
-    private static final String RSRP_TONE_FAIR = "signal-gauge-tone-fair";
-    private static final String RSRP_TONE_GOOD = "signal-gauge-tone-good";
-    private static final String RSRP_TONE_EXCELLENT = "signal-gauge-tone-excellent";
-    private static final String CHIP_TONE_NO_SIGNAL = "signal-chip-tone-nosignal";
-    private static final String CHIP_TONE_POOR = "signal-chip-tone-poor";
-    private static final String CHIP_TONE_FAIR = "signal-chip-tone-fair";
-    private static final String CHIP_TONE_GOOD = "signal-chip-tone-good";
-    private static final String CHIP_TONE_EXCELLENT = "signal-chip-tone-excellent";
-    private static final String METRIC_CHIP_TONE_NO_SIGNAL = "metric-chip-tone-nosignal";
-    private static final String METRIC_CHIP_TONE_POOR = "metric-chip-tone-poor";
-    private static final String METRIC_CHIP_TONE_FAIR = "metric-chip-tone-fair";
-    private static final String METRIC_CHIP_TONE_GOOD = "metric-chip-tone-good";
-    private static final String METRIC_CHIP_TONE_EXCELLENT = "metric-chip-tone-excellent";
-    private static final String METRIC_RANGE_TONE_NO_SIGNAL = "metric-range-fill-nosignal";
-    private static final String METRIC_RANGE_TONE_POOR = "metric-range-fill-poor";
-    private static final String METRIC_RANGE_TONE_FAIR = "metric-range-fill-fair";
-    private static final String METRIC_RANGE_TONE_GOOD = "metric-range-fill-good";
-    private static final String METRIC_RANGE_TONE_EXCELLENT = "metric-range-fill-excellent";
     private final FxStore fxStore;
+    private final SignalQualityScale quality;
     @FXML
     private BorderPane shellRoot;
     @FXML
@@ -132,6 +113,7 @@ public final class DashboardView {
 
     public DashboardView(FxStore fxStore) {
         this.fxStore = Objects.requireNonNull(fxStore, "fxStore must not be null");
+        quality = new SignalQualityScale();
     }
 
     @FXML
@@ -400,18 +382,20 @@ public final class DashboardView {
         parseRsrp(text)
           .ifPresentOrElse(
             value -> {
+              var gauge = quality.rsrp(value);
               applyRsrpFillLength(value);
-              applyRsrpTone(value);
-              applySignalChipTone(value);
-              applySignalChipText(value);
-              applySignalHeroCaption(value);
+              applyRsrpTone(gauge.level().gaugeTone());
+              applySignalChipTone(gauge.level().chipTone());
+              applySignalChipText(gauge.level().label());
+              applySignalHeroCaption(gauge.level().description());
           },
             () -> {
+              var gauge = quality.rsrp(RSRP_MIN);
               applyRsrpFillLength(RSRP_MIN);
-              applyRsrpTone(RSRP_MIN);
-              applySignalChipTone(RSRP_MIN);
-              applySignalChipText(RSRP_MIN);
-              applySignalHeroCaption(RSRP_MIN);
+              applyRsrpTone(gauge.level().gaugeTone());
+              applySignalChipTone(gauge.level().chipTone());
+              applySignalChipText(gauge.level().label());
+              applySignalHeroCaption(gauge.level().description());
           }
           );
     }
@@ -444,168 +428,70 @@ public final class DashboardView {
         rsrpGaugeFill.setLength(-1d * constrainedRatio * RSRP_SWEEP);
     }
 
-    private void applyRsrpTone(double value) {
-        String tone = rsrpToneClass(value);
-        applyRsrpTone(rsrpGaugeFill, tone);
+    private void applyRsrpTone(String tone) {
+        tone(rsrpGaugeFill, "signal-gauge-tone-", tone);
     }
 
-    private void applyRsrpTone(Arc zone, String tone) {
-        zone.getStyleClass().removeAll(
-          RSRP_TONE_NO_SIGNAL,
-          RSRP_TONE_POOR,
-          RSRP_TONE_FAIR,
-          RSRP_TONE_GOOD,
-          RSRP_TONE_EXCELLENT
-        );
-        zone.getStyleClass().add(tone);
-    }
-
-    private String rsrpToneClass(double value) {
-        if (value <= -110d) {
-            return RSRP_TONE_NO_SIGNAL;
-        }
-        if (value <= -100d) {
-            return RSRP_TONE_POOR;
-        }
-        if (value <= -90d) {
-            return RSRP_TONE_FAIR;
-        }
-        if (value <= -80d) {
-            return RSRP_TONE_GOOD;
-        }
-        return RSRP_TONE_EXCELLENT;
-    }
-
-    private void applySignalHeroCaption(double value) {
+    private void applySignalHeroCaption(String text) {
         if (signalHeroCaption == null) {
             return;
         }
-        signalHeroCaption.setText(rsrpDescription(value));
+        signalHeroCaption.setText(text);
     }
 
-    private void applySignalChipText(double value) {
+    private void applySignalChipText(String text) {
         if (signalChipText == null) {
             return;
         }
-        signalChipText.setText(rsrpQuality(value));
+        signalChipText.setText(text);
     }
 
-    private void applySignalChipTone(double value) {
+    private void applySignalChipTone(String tone) {
         if (signalChip == null) {
             return;
         }
-        var tone = rsrpChipToneClass(value);
-        signalChip.getStyleClass().removeAll(
-          CHIP_TONE_NO_SIGNAL,
-          CHIP_TONE_POOR,
-          CHIP_TONE_FAIR,
-          CHIP_TONE_GOOD,
-          CHIP_TONE_EXCELLENT
-        );
-        signalChip.getStyleClass().add(tone);
-    }
-
-    private String rsrpQuality(double value) {
-        if (value <= -110d) {
-            return "No signal";
-        }
-        if (value <= -100d) {
-            return "Poor";
-        }
-        if (value <= -90d) {
-            return "Fair";
-        }
-        if (value <= -80d) {
-            return "Good";
-        }
-        return "Excellent";
-    }
-
-    private String rsrpChipToneClass(double value) {
-        if (value <= -110d) {
-            return CHIP_TONE_NO_SIGNAL;
-        }
-        if (value <= -100d) {
-            return CHIP_TONE_POOR;
-        }
-        if (value <= -90d) {
-            return CHIP_TONE_FAIR;
-        }
-        if (value <= -80d) {
-            return CHIP_TONE_GOOD;
-        }
-        return CHIP_TONE_EXCELLENT;
-    }
-
-    private String rsrpDescription(double value) {
-        if (value <= -110d) {
-            return "Connection unusable or dropped";
-        }
-        if (value <= -100d) {
-            return "Drops likely, very slow speeds";
-        }
-        if (value <= -90d) {
-            return "Usable but inconsistent";
-        }
-        if (value <= -80d) {
-            return "Reliable for most tasks";
-        }
-        return "Strong, stable, fast speeds";
+        tone(signalChip, "signal-chip-tone-", tone);
     }
 
     private void applyRssiQuality(String text) {
-        var quality = parsePrimaryMetric(text)
-          .map(this::rssiQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
-        applyMetricVisuals(rssiQualityChip, quality, rssiRangeFill, rssiRangeTrack);
+        var value = parsePrimaryMetric(text)
+          .map(quality::rssi)
+          .orElse(quality.rssi(-110d));
+        applyMetricVisuals(rssiQualityChip, value, rssiRangeFill, rssiRangeTrack);
     }
 
     private void applySinrQuality(String text) {
-        var quality = parsePrimaryMetric(text)
-          .map(this::sinrQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
-        applyMetricVisuals(sinrQualityChip, quality, sinrRangeFill, sinrRangeTrack);
+        var value = parsePrimaryMetric(text)
+          .map(quality::sinr)
+          .orElse(quality.sinr(-3d));
+        applyMetricVisuals(sinrQualityChip, value, sinrRangeFill, sinrRangeTrack);
     }
 
     private void applyRsrqQuality(String text) {
-        var quality = parsePrimaryMetric(text)
-          .map(this::rsrqQualityBand)
-          .orElse(new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, 0d));
-        applyMetricVisuals(rsrqQualityChip, quality, rsrqRangeFill, rsrqRangeTrack);
+        var value = parsePrimaryMetric(text)
+          .map(quality::rsrq)
+          .orElse(quality.rsrq(-20d));
+        applyMetricVisuals(rsrqQualityChip, value, rsrqRangeFill, rsrqRangeTrack);
     }
 
-    private void applyMetricVisuals(Label chip, MetricQuality quality, Region rangeFill, AnchorPane rangeTrack) {
+    private void applyMetricVisuals(Label chip, SignalQualityScale.QualityValue quality, Region rangeFill, AnchorPane rangeTrack) {
         applyMetricChipQuality(chip, quality);
         applyMetricRangeQuality(rangeFill, rangeTrack, quality);
     }
 
-    private void applyMetricChipQuality(Label chip, MetricQuality quality) {
+    private void applyMetricChipQuality(Label chip, SignalQualityScale.QualityValue quality) {
         if (chip == null) {
             return;
         }
-        chip.setText(quality.label());
-        chip.getStyleClass().removeAll(
-          METRIC_CHIP_TONE_NO_SIGNAL,
-          METRIC_CHIP_TONE_POOR,
-          METRIC_CHIP_TONE_FAIR,
-          METRIC_CHIP_TONE_GOOD,
-          METRIC_CHIP_TONE_EXCELLENT
-        );
-        chip.getStyleClass().add(quality.chipToneClass());
+        chip.setText(quality.level().label());
+        tone(chip, "metric-chip-tone-", quality.level().chipTone());
     }
 
-    private void applyMetricRangeQuality(Region rangeFill, AnchorPane rangeTrack, MetricQuality quality) {
+    private void applyMetricRangeQuality(Region rangeFill, AnchorPane rangeTrack, SignalQualityScale.QualityValue quality) {
         if (rangeFill == null || rangeTrack == null) {
             return;
         }
-        rangeFill.getStyleClass().removeAll(
-          METRIC_RANGE_TONE_NO_SIGNAL,
-          METRIC_RANGE_TONE_POOR,
-          METRIC_RANGE_TONE_FAIR,
-          METRIC_RANGE_TONE_GOOD,
-          METRIC_RANGE_TONE_EXCELLENT
-        );
-        rangeFill.getStyleClass().add(quality.rangeToneClass());
+        tone(rangeFill, "metric-range-fill-", quality.level().rangeTone());
         var trackWidth = rangeTrack.getWidth();
         var trackHeight = rangeTrack.getHeight();
         if (trackWidth <= 0d || trackHeight <= 0d) {
@@ -615,66 +501,6 @@ public final class DashboardView {
         rangeFill.setMinSize(fillWidth, trackHeight);
         rangeFill.setPrefSize(fillWidth, trackHeight);
         rangeFill.setMaxSize(fillWidth, trackHeight);
-    }
-
-    private MetricQuality rssiQualityBand(double value) {
-        var ratio = normalizedRatio(value, -110d, -50d);
-        if (value <= -110d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
-        }
-        if (value <= -100d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
-        }
-        if (value <= -90d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
-        }
-        if (value <= -80d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
-        }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
-    }
-
-    private MetricQuality sinrQualityBand(double value) {
-        var ratio = normalizedRatio(value, -3d, 20d);
-        if (value <= -3d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
-        }
-        if (value <= 0d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
-        }
-        if (value <= 10d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
-        }
-        if (value <= 20d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
-        }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
-    }
-
-    private MetricQuality rsrqQualityBand(double value) {
-        var ratio = normalizedRatio(value, -20d, -5d);
-        if (value <= -20d) {
-            return new MetricQuality("No signal", METRIC_CHIP_TONE_NO_SIGNAL, METRIC_RANGE_TONE_NO_SIGNAL, ratio);
-        }
-        if (value <= -15d) {
-            return new MetricQuality("Poor", METRIC_CHIP_TONE_POOR, METRIC_RANGE_TONE_POOR, ratio);
-        }
-        if (value <= -10d) {
-            return new MetricQuality("Fair", METRIC_CHIP_TONE_FAIR, METRIC_RANGE_TONE_FAIR, ratio);
-        }
-        if (value <= -5d) {
-            return new MetricQuality("Good", METRIC_CHIP_TONE_GOOD, METRIC_RANGE_TONE_GOOD, ratio);
-        }
-        return new MetricQuality("Excellent", METRIC_CHIP_TONE_EXCELLENT, METRIC_RANGE_TONE_EXCELLENT, ratio);
-    }
-
-    private double normalizedRatio(double value, double min, double max) {
-        if (max <= min) {
-            return 0d;
-        }
-        var clamped = Math.max(min, Math.min(max, value));
-        var ratio = (clamped - min) / (max - min);
-        return Math.max(0d, Math.min(1d, ratio));
     }
 
     private void applyNoteTone(String note) {
@@ -723,7 +549,8 @@ public final class DashboardView {
         node.getStyleClass().add(tone);
     }
 
-    private record MetricQuality(String label, String chipToneClass, String rangeToneClass, double ratio) {
-
+    private void tone(Node node, String prefix, String tone) {
+        node.getStyleClass().removeIf(item -> item.startsWith(prefix));
+        node.getStyleClass().add(tone);
     }
 }
