@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox id="topStatusCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <Label styleClass="card-title" text="Top status strip" />
+    <GridPane styleClass="status-strip-grid">
+      <children>
+        <Label styleClass="metric-icon" text="NET" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label styleClass="metric-label" text="Network Type" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label id="networkTypeValue" fx:id="networkTypeValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+        <Label styleClass="metric-icon" text="SIM" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label styleClass="metric-label" text="SIM" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label id="simValue" fx:id="simValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+        <Label styleClass="metric-icon" text="AT" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label styleClass="metric-label" text="AT" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label id="atValue" fx:id="atValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+
+        <Label styleClass="metric-icon" text="W24" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label styleClass="metric-label" text="2.4 GHz Wi-Fi" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <Label id="wifi24Value" fx:id="wifi24Value" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+
+        <Label styleClass="metric-icon" text="W5" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <Label styleClass="metric-label" text="5 GHz Wi-Fi" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Label id="wifi5Value" fx:id="wifi5Value" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+
+        <Label styleClass="metric-icon" text="LAN" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <Label styleClass="metric-label" text="LAN" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+        <Label id="lanValue" fx:id="lanValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+      </children>
+    </GridPane>
+  </children>
+</VBox>

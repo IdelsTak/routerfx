@@ -66,6 +66,33 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void preLoginKeepsLoginOverlayHidden() {
+        assertThat("Expected login overlay to be hidden before explicit login action", lookup("#loginOverlay").query().isVisible(), is(false));
+    }
+
+    @Test
+    void preLoginRendersFourDistinctCardSections() {
+        assertThat("Expected top status card to be visible", lookup("#topStatusCard").query().isVisible(), is(true));
+        assertThat("Expected signal card to be visible", lookup("#signalCard").query().isVisible(), is(true));
+        assertThat("Expected network path card to be visible", lookup("#networkPathCard").query().isVisible(), is(true));
+        assertThat("Expected footer stats card to be visible", lookup("#footerStatsCard").query().isVisible(), is(true));
+    }
+
+    @Test
+    void preLoginShowsNetworkPathNodes() {
+        assertThat("Expected router node to be visible in network path card", lookup("#routerPathNode").query().isVisible(), is(true));
+        assertThat("Expected internet node to be visible in network path card", lookup("#internetPathNode").query().isVisible(), is(true));
+        assertThat("Expected primary DNS node to be visible in network path card", lookup("#primaryDnsPathNode").query().isVisible(), is(true));
+        assertThat("Expected secondary DNS node to be visible in network path card", lookup("#secondaryDnsPathNode").query().isVisible(), is(true));
+    }
+
+    @Test
+    void connectButtonShowsLoginOverlay() {
+        clickOn("#connectButton");
+        assertThat("Expected connect button to show login overlay", lookup("#loginOverlay").query().isVisible(), is(true));
+    }
+
+    @Test
     void shellScrollPaneKeepsHorizontalBarHidden() {
         assertThat("Expected shell scroll pane to keep horizontal bar policy set to NEVER", lookup(".shell-scroll").queryAs(ScrollPane.class).getHbarPolicy(), is(ScrollPane.ScrollBarPolicy.NEVER));
     }
@@ -104,18 +131,25 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     @Test
+    void successfulLoginSubmitHidesLoginOverlay() {
+        connect();
+        assertThat("Expected login overlay to be hidden after successful authentication", lookup("#loginOverlay").query().isVisible(), is(false));
+    }
+
+    @Test
     void delayedConnectDisablesConnectButtonWhileLoading() {
         challengeResult = () -> {
             pauseMillis(350);
             return new Result.Success<>(new Challenge("tok"));
         };
+        clickOn("#connectButton");
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        clickOn("#connectButton");
+        submitLogin();
         WaitForAsyncUtils.sleep(60, TimeUnit.MILLISECONDS);
         WaitForAsyncUtils.waitForFxEvents();
-        assertThat("Expected connect button to be disabled while login is in-flight", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(true));
+        assertThat("Expected login submit button to be disabled while login is in-flight", lookup("#loginSubmitButton").queryAs(Button.class).isDisabled(), is(true));
     }
 
     @Test
@@ -124,12 +158,13 @@ final class DesktopAppTest extends ApplicationTest {
             pauseMillis(250);
             return new Result.Success<>(new Challenge("tok"));
         };
+        clickOn("#connectButton");
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        clickOn("#connectButton");
-        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
-        assertThat("Expected connect button to re-enable after login completes", lookup("#connectButton").queryAs(Button.class).isDisabled(), is(false));
+        submitLogin();
+        waitForCondition(() -> !lookup("#loginSubmitButton").queryAs(Button.class).isDisabled());
+        assertThat("Expected login submit button to re-enable after login completes", lookup("#loginSubmitButton").queryAs(Button.class).isDisabled(), is(false));
     }
 
     @Test
@@ -276,17 +311,27 @@ final class DesktopAppTest extends ApplicationTest {
     }
 
     private void connect() {
+        clickOn("#connectButton");
+        waitForCondition(() -> lookup("#loginOverlay").query().isVisible());
         replaceText("#baseUrlField", "http://router.local");
         replaceText("#usernameField", "admin");
         replaceText("#passwordField", "pass");
-        waitForCondition(() -> !lookup("#connectButton").queryAs(Button.class).isDisabled());
-        clickOn("#connectButton");
+        submitLogin();
         waitForCondition(() -> {
             String note = lookup("#noteLabel").queryLabeled().getText();
             return lookup("#authPanel").query().isVisible()
               || "Authentication failed".equals(note)
               || "Connected".equals(note);
         });
+    }
+
+    private void submitLogin() {
+        waitForCondition(() -> {
+            Button submit = lookup("#loginSubmitButton").queryAs(Button.class);
+            return submit.isVisible() && !submit.isDisabled();
+        });
+        Button submit = lookup("#loginSubmitButton").queryAs(Button.class);
+        interact(submit::fire);
     }
 
     private void waitForCondition(Supplier<Boolean> condition) {

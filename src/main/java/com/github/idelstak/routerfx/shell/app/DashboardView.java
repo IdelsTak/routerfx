@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.function.*;
 import javafx.beans.binding.*;
 import javafx.fxml.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -14,6 +15,16 @@ public final class DashboardView {
     private static final String NOTE_WARNING = "note-warning";
     private static final String NOTE_CAUTION = "note-caution";
     private final FxStore fxStore;
+    @FXML
+    private BorderPane shellRoot;
+    @FXML
+    private VBox topStatusCard;
+    @FXML
+    private VBox signalCard;
+    @FXML
+    private VBox networkPathCard;
+    @FXML
+    private VBox footerStatsCard;
     @FXML
     private TextField baseUrl;
     @FXML
@@ -25,15 +36,61 @@ public final class DashboardView {
     @FXML
     private Button refresh;
     @FXML
+    private Button loginSubmit;
+    @FXML
+    private Button loginCancel;
+    @FXML
     private Label noteLabel;
     @FXML
+    private VBox loginOverlay;
+    @FXML
     private VBox authenticated;
+    private Label routerPathNode;
+    private Label internetPathNode;
+    private Label primaryDnsPathNode;
+    private Label secondaryDnsPathNode;
+    private Label primaryDnsLink;
+    private Label secondaryDnsLink;
+    private Label networkTypeValue;
+    private Label simValue;
+    private Label atValue;
+    private Label wifi24Value;
+    private Label wifi5Value;
+    private Label lanValue;
+    private Label rsrpValue;
+    private Label rssiValue;
+    private Label rsrqValue;
+    private Label sinrValue;
+    private Label pciValue;
+    private Label earfcnValue;
+    private Label ipValue;
+    private Label wanMacValue;
+    private Label primaryDnsValue;
+    private Label secondaryDnsValue;
+    private Label ipv6Value;
+    private Label primaryIpv6DnsValue;
+    private Label secondaryIpv6DnsValue;
+    private Label runningTimeValue;
+    private Label firmwareVersionValue;
+    private Label antennaStatusValue;
     @FXML
-    private GridPane commonGrid;
+    private Label operatorValue;
     @FXML
-    private GridPane authGrid;
+    private Label currentBandValue;
     @FXML
-    private GridPane statusGrid;
+    private Label bandwidthValue;
+    @FXML
+    private Label uptimeValue;
+    @FXML
+    private Label currentFlowValue;
+    @FXML
+    private Label statusSignalValue;
+    @FXML
+    private Label statusNetworkTypeValue;
+    @FXML
+    private Label statusSimValue;
+    @FXML
+    private Label statusSmsValue;
 
     public DashboardView(FxStore fxStore) {
         this.fxStore = Objects.requireNonNull(fxStore, "fxStore must not be null");
@@ -41,88 +98,122 @@ public final class DashboardView {
 
     @FXML
     protected void initialize() {
-        rows();
+        resolveIncludedNodes();
+        bindValues();
         wire();
     }
 
-    private void rows() {
-        row(commonGrid, 0, "Network Type", value("networkTypeValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::networkType)));
-        row(commonGrid, 1, "SIM", value("simValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::sim)));
-        row(commonGrid, 2, "AT", value("atValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::at)));
-        row(commonGrid, 3, "2.4 GHz Wi-Fi", value("wifi24Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wifi24)));
-        row(commonGrid, 4, "5 GHz Wi-Fi", value("wifi5Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wifi5)));
-        row(commonGrid, 5, "LAN", value("lanValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::lan)));
-        row(commonGrid, 6, "RSRP", value("rsrpValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rsrp), "metric-caution"));
-        row(commonGrid, 7, "RSSI", value("rssiValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rssi), "metric-caution"));
-        row(commonGrid, 8, "RSRQ", value("rsrqValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::rsrq), "metric-warning"));
-        row(commonGrid, 9, "SINR", value("sinrValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::sinr), "metric-warning"));
-        row(commonGrid, 10, "PCI", value("pciValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::pci)));
-        row(commonGrid, 11, "EARFCN", value("earfcnValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::earfcn)));
-        row(commonGrid, 12, "IP", value("ipValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::ip)));
-        row(commonGrid, 13, "WAN MAC", value("wanMacValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::wanMac)));
-        row(commonGrid, 14, "Primary DNS", value("primaryDnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::primaryDns)));
-        row(commonGrid, 15, "Secondary DNS", value("secondaryDnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::secondaryDns)));
-        row(commonGrid, 16, "IPv6", value("ipv6Value", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::ipv6)));
-        row(commonGrid, 17, "Primary IPv6 DNS", value("primaryIpv6DnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::primaryIpv6Dns)));
-        row(commonGrid, 18, "Secondary IPv6 DNS", value("secondaryIpv6DnsValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::secondaryIpv6Dns)));
-        row(commonGrid, 19, "Running Time", value("runningTimeValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::runningTime)));
-        row(commonGrid, 20, "Firmware Version", value("firmwareVersionValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::firmwareVersion)));
-        row(commonGrid, 21, "Antenna Status", value("antennaStatusValue", state ->
-          commonValue(state.dashboard().common(), CommonDashboard::antennaStatus)));
+    private void resolveIncludedNodes() {
+        networkTypeValue = requiredLabel(topStatusCard, "networkTypeValue");
+        simValue = requiredLabel(topStatusCard, "simValue");
+        atValue = requiredLabel(topStatusCard, "atValue");
+        wifi24Value = requiredLabel(topStatusCard, "wifi24Value");
+        wifi5Value = requiredLabel(topStatusCard, "wifi5Value");
+        lanValue = requiredLabel(topStatusCard, "lanValue");
+        rsrpValue = requiredLabel(signalCard, "rsrpValue");
+        rssiValue = requiredLabel(signalCard, "rssiValue");
+        rsrqValue = requiredLabel(signalCard, "rsrqValue");
+        sinrValue = requiredLabel(signalCard, "sinrValue");
+        pciValue = requiredLabel(signalCard, "pciValue");
+        earfcnValue = requiredLabel(signalCard, "earfcnValue");
+        ipValue = requiredLabel(networkPathCard, "ipValue");
+        wanMacValue = requiredLabel(networkPathCard, "wanMacValue");
+        primaryDnsValue = requiredLabel(networkPathCard, "primaryDnsValue");
+        secondaryDnsValue = requiredLabel(networkPathCard, "secondaryDnsValue");
+        ipv6Value = requiredLabel(networkPathCard, "ipv6Value");
+        primaryIpv6DnsValue = requiredLabel(networkPathCard, "primaryIpv6DnsValue");
+        secondaryIpv6DnsValue = requiredLabel(networkPathCard, "secondaryIpv6DnsValue");
+        runningTimeValue = requiredLabel(footerStatsCard, "runningTimeValue");
+        firmwareVersionValue = requiredLabel(footerStatsCard, "firmwareVersionValue");
+        antennaStatusValue = requiredLabel(footerStatsCard, "antennaStatusValue");
+        operatorValue = requiredLabel(authenticated, "operatorValue");
+        currentBandValue = requiredLabel(authenticated, "currentBandValue");
+        bandwidthValue = requiredLabel(authenticated, "bandwidthValue");
+        uptimeValue = requiredLabel(authenticated, "uptimeValue");
+        currentFlowValue = requiredLabel(authenticated, "currentFlowValue");
+        statusSignalValue = requiredLabel(authenticated, "statusSignalValue");
+        statusNetworkTypeValue = requiredLabel(authenticated, "statusNetworkTypeValue");
+        statusSimValue = requiredLabel(authenticated, "statusSimValue");
+        statusSmsValue = requiredLabel(authenticated, "statusSmsValue");
+        routerPathNode = requiredLabel(networkPathCard, "routerPathNode");
+        internetPathNode = requiredLabel(networkPathCard, "internetPathNode");
+        primaryDnsPathNode = requiredLabel(networkPathCard, "primaryDnsPathNode");
+        secondaryDnsPathNode = requiredLabel(networkPathCard, "secondaryDnsPathNode");
+        primaryDnsLink = requiredLabel(networkPathCard, "primaryDnsLink");
+        secondaryDnsLink = requiredLabel(networkPathCard, "secondaryDnsLink");
+    }
 
-        row(authGrid, 0, "Operator", value("operatorValue", state ->
-          radioValue(state, RadioState::networkOperator)));
-        row(authGrid, 1, "Current Band", value("currentBandValue", state ->
-          radioValue(state, RadioState::currentBand)));
-        row(authGrid, 2, "Bandwidth", value("bandwidthValue", state ->
-          radioValue(state, RadioState::bandwidth)));
-        row(authGrid, 3, "Uptime", value("uptimeValue", state ->
-          radioValue(state, RadioState::onlineDuration)));
-        row(authGrid, 4, "Current Traffic", value("currentFlowValue", state ->
-          radioValue(state, item -> item.flowDl() + "/" + item.flowUl())));
+    private void bindValues() {
+        bindCommon(networkTypeValue, CommonDashboard::networkType);
+        bindCommon(simValue, CommonDashboard::sim);
+        bindCommon(atValue, CommonDashboard::at);
+        bindCommon(wifi24Value, CommonDashboard::wifi24);
+        bindCommon(wifi5Value, CommonDashboard::wifi5);
+        bindCommon(lanValue, CommonDashboard::lan);
 
-        row(statusGrid, 0, "Signal Level", value("statusSignalValue", state ->
-          statusBarValue(state, StatusBarState::signalLevel), "metric-success"));
-        row(statusGrid, 1, "Network Type", value("statusNetworkTypeValue", state ->
-          statusBarValue(state, StatusBarState::networkType)));
-        row(statusGrid, 2, "SIM", value("statusSimValue", state ->
-          statusBarValue(state, StatusBarState::sim)));
-        row(statusGrid, 3, "SMS Unread", value("statusSmsValue", state ->
-          statusBarValue(state, StatusBarState::smsUnread)));
+        bindCommon(rsrpValue, CommonDashboard::rsrp);
+        bindCommon(rssiValue, CommonDashboard::rssi);
+        bindCommon(rsrqValue, CommonDashboard::rsrq);
+        bindCommon(sinrValue, CommonDashboard::sinr);
+        bindCommon(pciValue, CommonDashboard::pci);
+        bindCommon(earfcnValue, CommonDashboard::earfcn);
+
+        bindCommon(ipValue, CommonDashboard::ip);
+        bindCommon(wanMacValue, CommonDashboard::wanMac);
+        bindCommon(primaryDnsValue, CommonDashboard::primaryDns);
+        bindCommon(secondaryDnsValue, CommonDashboard::secondaryDns);
+        bindCommon(ipv6Value, CommonDashboard::ipv6);
+        bindCommon(primaryIpv6DnsValue, CommonDashboard::primaryIpv6Dns);
+        bindCommon(secondaryIpv6DnsValue, CommonDashboard::secondaryIpv6Dns);
+
+        bindCommon(runningTimeValue, CommonDashboard::runningTime);
+        bindCommon(firmwareVersionValue, CommonDashboard::firmwareVersion);
+        bindCommon(antennaStatusValue, CommonDashboard::antennaStatus);
+
+        bindRadio(operatorValue, RadioState::networkOperator);
+        bindRadio(currentBandValue, RadioState::currentBand);
+        bindRadio(bandwidthValue, RadioState::bandwidth);
+        bindRadio(uptimeValue, RadioState::onlineDuration);
+        bindRadio(currentFlowValue, item -> item.flowDl() + "/" + item.flowUl());
+
+        bindStatusBar(statusSignalValue, StatusBarState::signalLevel);
+        bindStatusBar(statusNetworkTypeValue, StatusBarState::networkType);
+        bindStatusBar(statusSimValue, StatusBarState::sim);
+        bindStatusBar(statusSmsValue, StatusBarState::smsUnread);
+    }
+
+    private void bindCommon(Label label, Function<CommonDashboard, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().common().map(projector).orElse("-")));
+    }
+
+    private void bindRadio(Label label, Function<RadioState, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().radio().map(projector).orElse("-")));
+    }
+
+    private void bindStatusBar(Label label, Function<StatusBarState, String> projector) {
+        label.textProperty().bind(stringValue(state ->
+          state.dashboard().statusBar().map(projector).orElse("-")));
     }
 
     private void wire() {
         noteLabel.textProperty().bind(stringValue(state -> state.ui().note()));
         applyNoteTone(fxStore.read().ui().note());
+        loginOverlay.visibleProperty().bind(booleanValue(state -> state.ui().loginOverlayVisible()));
+        loginOverlay.managedProperty().bind(loginOverlay.visibleProperty());
 
         syncLoginFields(fxStore.read());
         fxStore.stateProperty().addListener((_, _, newValue) -> {
             syncLoginFields(newValue);
             applyNoteTone(newValue.ui().note());
+            applyPathTone(newValue);
         });
+        applyPathTone(fxStore.read());
 
-        connect.setOnAction(_ -> {
+        connect.setOnAction(_ -> fxStore.dispatch(new Msg.LoginOverlayOpened()));
+        loginCancel.setOnAction(_ -> fxStore.dispatch(new Msg.LoginOverlayClosed()));
+        loginSubmit.setOnAction(_ -> {
             fxStore.dispatch(new Msg.ConnectRequested(
               baseUrl.getText(),
               new Credentials(username.getText(), password.getText())
@@ -130,7 +221,7 @@ public final class DashboardView {
             password.clear();
         });
         refresh.setOnAction(_ -> fxStore.dispatch(new Msg.RefreshRequested()));
-        connect.disableProperty().bind(booleanValue(state -> state.ui().busy()));
+        loginSubmit.disableProperty().bind(booleanValue(state -> state.ui().busy()));
         refresh.disableProperty().bind(booleanValue(state ->
           !state.ui().canRefresh() || state.ui().busy()));
 
@@ -151,20 +242,6 @@ public final class DashboardView {
         }
     }
 
-    private Label value(String id, Function<AppState, String> projector) {
-        var label = new Label("-");
-        label.setId(id);
-        label.getStyleClass().add("metric-value");
-        label.textProperty().bind(stringValue(projector));
-        return label;
-    }
-
-    private Label value(String id, Function<AppState, String> projector, String tone) {
-        var label = value(id, projector);
-        label.getStyleClass().add(tone);
-        return label;
-    }
-
     private StringBinding stringValue(Function<AppState, String> projector) {
         return Bindings.createStringBinding(() ->
           safe(projector.apply(fxStore.stateProperty().get())), fxStore.stateProperty());
@@ -174,23 +251,26 @@ public final class DashboardView {
         return Bindings.createBooleanBinding(() -> projector.apply(fxStore.stateProperty().get()), fxStore.stateProperty());
     }
 
-    private void row(GridPane grid, int index, String title, Labeled value) {
-        var label = new Label(title);
-        label.getStyleClass().add("metric-label");
-        grid.add(label, 0, index);
-        grid.add(value, 1, index);
+    private Label requiredLabel(Parent root, String id) {
+        return findById(root, id)
+          .filter(Label.class::isInstance)
+          .map(Label.class::cast)
+          .orElseThrow(() -> new IllegalStateException("Missing label: " + id));
     }
 
-    private String commonValue(Optional<CommonDashboard> common, Function<CommonDashboard, String> projector) {
-        return common.map(projector).orElse("-");
-    }
-
-    private String radioValue(AppState state, Function<RadioState, String> projector) {
-        return state.dashboard().radio().map(projector).orElse("-");
-    }
-
-    private String statusBarValue(AppState state, Function<StatusBarState, String> projector) {
-        return state.dashboard().statusBar().map(projector).orElse("-");
+    private Optional<Node> findById(Node node, String id) {
+        if (id.equals(node.getId())) {
+            return Optional.of(node);
+        }
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                var match = findById(child, id);
+                if (match.isPresent()) {
+                    return match;
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     private String safe(String value) {
@@ -213,5 +293,33 @@ public final class DashboardView {
             return;
         }
         noteLabel.getStyleClass().add(NOTE_SUCCESS);
+    }
+
+    private void applyPathTone(AppState state) {
+        var common = state.dashboard().common();
+        var ip = common.map(CommonDashboard::ip).orElse("-");
+        var primary = common.map(CommonDashboard::primaryDns).orElse("-");
+        var secondary = common.map(CommonDashboard::secondaryDns).orElse("-");
+        var routerUp = !"-".equals(ip);
+        var primaryUp = !"-".equals(primary);
+        var secondaryUp = !"-".equals(secondary);
+        tone(routerPathNode, routerUp ? "path-node-active" : "path-node-inactive");
+        tone(internetPathNode, routerUp ? "path-node-active" : "path-node-inactive");
+        tone(primaryDnsPathNode, primaryUp ? "path-node-active" : "path-node-inactive");
+        tone(secondaryDnsPathNode, secondaryUp ? "path-node-active" : "path-node-fallback");
+        tone(primaryDnsLink, primaryUp ? "path-link-active" : "path-link-inactive");
+        tone(secondaryDnsLink, secondaryUp ? "path-link-active" : "path-link-fallback");
+    }
+
+    private void tone(Labeled node, String tone) {
+        node.getStyleClass().removeAll(
+          "path-node-active",
+          "path-node-inactive",
+          "path-node-fallback",
+          "path-link-active",
+          "path-link-inactive",
+          "path-link-fallback"
+        );
+        node.getStyleClass().add(tone);
     }
 }

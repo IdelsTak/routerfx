@@ -40,17 +40,20 @@
     -fx-spacing: 8px;
     -fx-alignment: center-left
 }
+.header-actions {
+    -fx-spacing: 8px
+}
 .brand-block {
     -fx-spacing: 2px
 }
 .brand-title {
     -fx-font-size: 24px;
-    -fx-font-family: 'Geist Bold';
+    -fx-font-family: "Geist Bold";
     -fx-text-fill: -fx-text-primary
 }
 .brand-subtitle {
     -fx-font-size: 13px;
-    -fx-font-family: 'Geist SemiBold';
+    -fx-font-family: "Geist SemiBold";
     -fx-text-fill: -fx-text-muted
 }
 .card-surface {
@@ -63,20 +66,84 @@
     -fx-spacing: 10px;
     -fx-effect: dropshadow(gaussian, rgba(22, 28, 34, 0.08), 14, 0.1, 0, 3)
 }
+.login-strip {
+    -fx-spacing: 8px
+}
+.login-overlay {
+    -fx-alignment: center;
+    -fx-fill-width: true;
+    -fx-background-color: rgba(16, 22, 28, 0.36);
+    -fx-padding: 24px
+}
+.login-card {
+    -fx-max-width: 520px;
+    -fx-pref-width: 520px
+}
+.compact-grid {
+    -fx-vgap: 6px
+}
 .access-grid {
     -fx-hgap: 8px;
     -fx-vgap: 8px
 }
-.action-row {
-    -fx-spacing: 8px
+.login-actions {
+    -fx-spacing: 8px;
+    -fx-alignment: center-left
+}
+.status-strip-grid {
+    -fx-hgap: 18px;
+    -fx-vgap: 8px
 }
 .metrics-grid {
     -fx-hgap: 8px;
     -fx-vgap: 6px
 }
+.footer-grid {
+    -fx-hgap: 24px;
+    -fx-vgap: 8px
+}
+.path-row {
+    -fx-spacing: 8px;
+    -fx-alignment: center-left
+}
+.path-node {
+    -fx-padding: 6 10 6 10;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-font-family: "Geist SemiBold";
+    -fx-font-size: 11px
+}
+.path-link {
+    -fx-font-family: "JetBrains Mono Regular";
+    -fx-font-size: 12px
+}
+.path-node-active {
+    -fx-background-color: -fx-accent-success-soft;
+    -fx-border-color: -fx-accent-success;
+    -fx-text-fill: #2d5510
+}
+.path-node-inactive {
+    -fx-background-color: #eef1f4;
+    -fx-border-color: #ccd2d8;
+    -fx-text-fill: #6c7680
+}
+.path-node-fallback {
+    -fx-background-color: #f0e5d1;
+    -fx-border-color: -fx-accent-warning;
+    -fx-text-fill: #7a4a00
+}
+.path-link-active {
+    -fx-text-fill: -fx-accent-success
+}
+.path-link-inactive {
+    -fx-text-fill: #a8b0b8
+}
+.path-link-fallback {
+    -fx-text-fill: -fx-accent-warning
+}
 .card-title {
     -fx-font-size: 12px;
-    -fx-font-family: 'Geist Bold';
+    -fx-font-family: "Geist Bold";
     -fx-text-fill: -fx-text-muted;
     -fx-letter-spacing: 0.08em
 }
@@ -89,13 +156,38 @@
     -fx-background-color: #5a8a28;
     -fx-border-color: #5a8a28
 }
+#connectButton:focused,
+#refreshButton:focused,
+.text-field:focused,
+.password-field:focused {
+    -fx-border-color: -fx-accent-warning;
+    -fx-border-width: 2px
+}
 .metric-label {
     -fx-text-fill: -fx-text-muted;
     -fx-font-size: 12px
 }
+.metric-icon {
+    -fx-background-color: #eef1f4;
+    -fx-border-color: #ccd2d8;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-padding: 2 6 2 6;
+    -fx-font-family: "Geist SemiBold";
+    -fx-font-size: 10px;
+    -fx-text-fill: #59636d
+}
 .metric-value {
     -fx-font-size: 13px;
-    -fx-font-family: 'JetBrains Mono SemiBold'
+    -fx-font-family: "JetBrains Mono SemiBold"
+}
+.status-strip-grid .metric-label,
+.footer-grid .metric-label {
+    -fx-font-size: 11px
+}
+.status-strip-grid .metric-value,
+.footer-grid .metric-value {
+    -fx-font-size: 12px
 }
 .metric-value.metric-success {
     -fx-text-fill: -fx-accent-success
@@ -108,7 +200,7 @@
 }
 .note-label {
     -fx-background-radius: 999;
-    -fx-font-family: 'Geist Bold';
+    -fx-font-family: "Geist Bold";
     -fx-padding: 4 10 4 10
 }
 .note-label.note-success {

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox id="signalCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <Label styleClass="card-title" text="Signal strength" />
+    <GridPane styleClass="metrics-grid">
+      <children>
+        <Label styleClass="metric-label" text="RSRP" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label id="rsrpValue" fx:id="rsrpValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0">
+          <styleClass>
+            <String fx:value="metric-value" />
+            <String fx:value="metric-caution" />
+          </styleClass>
+        </Label>
+
+        <Label styleClass="metric-label" text="RSSI" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label id="rssiValue" fx:id="rssiValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1">
+          <styleClass>
+            <String fx:value="metric-value" />
+            <String fx:value="metric-caution" />
+          </styleClass>
+        </Label>
+
+        <Label styleClass="metric-label" text="RSRQ" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label id="rsrqValue" fx:id="rsrqValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2">
+          <styleClass>
+            <String fx:value="metric-value" />
+            <String fx:value="metric-warning" />
+          </styleClass>
+        </Label>
+
+        <Label styleClass="metric-label" text="SINR" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label id="sinrValue" fx:id="sinrValue" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3">
+          <styleClass>
+            <String fx:value="metric-value" />
+            <String fx:value="metric-warning" />
+          </styleClass>
+        </Label>
+
+        <Label styleClass="metric-label" text="PCI" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <Label id="pciValue" fx:id="pciValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+        <Label styleClass="metric-label" text="EARFCN" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <Label id="earfcnValue" fx:id="earfcnValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      </children>
+    </GridPane>
+  </children>
+</VBox>
