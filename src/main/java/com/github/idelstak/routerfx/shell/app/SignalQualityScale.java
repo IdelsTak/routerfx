@@ -56,22 +56,22 @@ final class SignalQualityScale {
           -3d,
           20d,
           List.of(
-            new QualityBand(-3d, new QualityLevel("No signal", "", "", METRIC_CHIP_NO_SIGNAL, METRIC_RANGE_NO_SIGNAL)),
-            new QualityBand(0d, new QualityLevel("Poor", "", "", METRIC_CHIP_POOR, METRIC_RANGE_POOR)),
-            new QualityBand(10d, new QualityLevel("Fair", "", "", METRIC_CHIP_FAIR, METRIC_RANGE_FAIR)),
-            new QualityBand(20d, new QualityLevel("Good", "", "", METRIC_CHIP_GOOD, METRIC_RANGE_GOOD)),
-            new QualityBand(Double.POSITIVE_INFINITY, new QualityLevel("Excellent", "", "", METRIC_CHIP_EXCELLENT, METRIC_RANGE_EXCELLENT))
+            new QualityBand(-3d, new QualityLevel("Interference dominant", "", "", METRIC_CHIP_NO_SIGNAL, METRIC_RANGE_NO_SIGNAL)),
+            new QualityBand(0d, new QualityLevel("High interference", "", "", METRIC_CHIP_POOR, METRIC_RANGE_POOR)),
+            new QualityBand(10d, new QualityLevel("Moderate interference", "", "", METRIC_CHIP_FAIR, METRIC_RANGE_FAIR)),
+            new QualityBand(20d, new QualityLevel("Low interference", "", "", METRIC_CHIP_GOOD, METRIC_RANGE_GOOD)),
+            new QualityBand(Double.POSITIVE_INFINITY, new QualityLevel("Clean signal", "", "", METRIC_CHIP_EXCELLENT, METRIC_RANGE_EXCELLENT))
           )
         );
         this.rsrq = new MetricScale(
           -20d,
           -5d,
           List.of(
-            new QualityBand(-20d, new QualityLevel("No signal", "", "", METRIC_CHIP_NO_SIGNAL, METRIC_RANGE_NO_SIGNAL)),
-            new QualityBand(-15d, new QualityLevel("Poor", "", "", METRIC_CHIP_POOR, METRIC_RANGE_POOR)),
-            new QualityBand(-10d, new QualityLevel("Fair", "", "", METRIC_CHIP_FAIR, METRIC_RANGE_FAIR)),
-            new QualityBand(-5d, new QualityLevel("Good", "", "", METRIC_CHIP_GOOD, METRIC_RANGE_GOOD)),
-            new QualityBand(Double.POSITIVE_INFINITY, new QualityLevel("Excellent", "", "", METRIC_CHIP_EXCELLENT, METRIC_RANGE_EXCELLENT))
+            new QualityBand(-20d, new QualityLevel("Severe congestion", "", "", METRIC_CHIP_NO_SIGNAL, METRIC_RANGE_NO_SIGNAL)),
+            new QualityBand(-15d, new QualityLevel("High congestion", "", "", METRIC_CHIP_POOR, METRIC_RANGE_POOR)),
+            new QualityBand(-10d, new QualityLevel("Moderate congestion", "", "", METRIC_CHIP_FAIR, METRIC_RANGE_FAIR)),
+            new QualityBand(-5d, new QualityLevel("Low congestion", "", "", METRIC_CHIP_GOOD, METRIC_RANGE_GOOD)),
+            new QualityBand(Double.POSITIVE_INFINITY, new QualityLevel("Clear channel", "", "", METRIC_CHIP_EXCELLENT, METRIC_RANGE_EXCELLENT))
           )
         );
     }

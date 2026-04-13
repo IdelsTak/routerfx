@@ -40,22 +40,22 @@ final class SignalQualityScaleTest {
 
     @Test
     void sinrMapsFairLabelAtMiddleBand() {
-        assertThat("Expected SINR middle band to map to fair label", quality.sinr(5d).level().label(), is("Fair"));
+        assertThat("Expected SINR middle band to map to moderate interference label", quality.sinr(5d).level().label(), is("Moderate interference"));
     }
 
     @Test
     void sinrMapsGoodLabelAtUpperMiddleBand() {
-        assertThat("Expected SINR upper middle band to map to good label", quality.sinr(20d).level().label(), is("Good"));
+        assertThat("Expected SINR upper middle band to map to low interference label", quality.sinr(20d).level().label(), is("Low interference"));
     }
 
     @Test
     void rsrqMapsPoorLabelAtPoorBand() {
-        assertThat("Expected RSRQ poor band to map to poor label", quality.rsrq(-15d).level().label(), is("Poor"));
+        assertThat("Expected RSRQ poor band to map to high congestion label", quality.rsrq(-15d).level().label(), is("High congestion"));
     }
 
     @Test
     void rsrqMapsExcellentLabelAboveTopBand() {
-        assertThat("Expected RSRQ above-top values to map to excellent label", quality.rsrq(-2d).level().label(), is("Excellent"));
+        assertThat("Expected RSRQ above-top values to map to clear channel label", quality.rsrq(-2d).level().label(), is("Clear channel"));
     }
 
     @Test

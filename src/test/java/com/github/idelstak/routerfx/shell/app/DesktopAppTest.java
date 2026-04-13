@@ -181,11 +181,11 @@ final class DesktopAppTest extends ApplicationTest {
                           String rsrqLabel, String rsrqTone, String rsrqRangeTone) {
         }
         List<MetricCase> cases = List.of(
-          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal"),
-          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "Poor", "metric-chip-tone-poor", "metric-range-fill-poor"),
-          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Fair", "metric-chip-tone-fair", "metric-range-fill-fair"),
-          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "metric-range-fill-good", "Good", "metric-chip-tone-good", "metric-range-fill-good", "Good", "metric-chip-tone-good", "metric-range-fill-good"),
-          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent")
+          new MetricCase(-120, -6, -22, "No signal", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "Interference dominant", "metric-chip-tone-nosignal", "metric-range-fill-nosignal", "Severe congestion", "metric-chip-tone-nosignal", "metric-range-fill-nosignal"),
+          new MetricCase(-105, -1, -16, "Poor", "metric-chip-tone-poor", "metric-range-fill-poor", "High interference", "metric-chip-tone-poor", "metric-range-fill-poor", "High congestion", "metric-chip-tone-poor", "metric-range-fill-poor"),
+          new MetricCase(-95, 5, -12, "Fair", "metric-chip-tone-fair", "metric-range-fill-fair", "Moderate interference", "metric-chip-tone-fair", "metric-range-fill-fair", "Moderate congestion", "metric-chip-tone-fair", "metric-range-fill-fair"),
+          new MetricCase(-85, 15, -6, "Good", "metric-chip-tone-good", "metric-range-fill-good", "Low interference", "metric-chip-tone-good", "metric-range-fill-good", "Low congestion", "metric-chip-tone-good", "metric-range-fill-good"),
+          new MetricCase(-70, 25, -2, "Excellent", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Clean signal", "metric-chip-tone-excellent", "metric-range-fill-excellent", "Clear channel", "metric-chip-tone-excellent", "metric-range-fill-excellent")
         );
         List<String> failures = new ArrayList<>();
         Label rssiChip = lookup("#rssiQualityChip").queryAs(Label.class);
