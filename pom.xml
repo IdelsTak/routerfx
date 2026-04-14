@@ -20,6 +20,7 @@
     <test.groups></test.groups>
     <test.excluded.groups></test.excluded.groups>
     <jacoco.min.line.coverage>0.00</jacoco.min.line.coverage>
+    <ikonli.version>12.4.0</ikonli.version>
   </properties>
 
   <dependencies>
@@ -37,6 +38,21 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kordamp.ikonli</groupId>
+      <artifactId>ikonli-javafx</artifactId>
+      <version>${ikonli.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kordamp.ikonli</groupId>
+      <artifactId>ikonli-fontawesome5-pack</artifactId>
+      <version>${ikonli.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kordamp.ikonli</groupId>
+      <artifactId>ikonli-fontawesome6-pack</artifactId>
+      <version>${ikonli.version}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

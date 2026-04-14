@@ -3,6 +3,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
 <VBox id="networkPathCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
   <children>
@@ -14,6 +15,13 @@
             <String fx:value="path-node" />
             <String fx:value="path-node-active" />
           </styleClass>
+          <graphic>
+            <FontIcon iconLiteral="fas-network-wired">
+                     <styleClass>
+                        <String fx:value="dashboard-icon-glyph" />
+                        <String fx:value="path-node-icon" />
+                     </styleClass></FontIcon>
+          </graphic>
         </Label>
         <Label id="primaryDnsLink" fx:id="primaryDnsLink" text="------">
           <styleClass>
@@ -26,6 +34,13 @@
             <String fx:value="path-node" />
             <String fx:value="path-node-active" />
           </styleClass>
+          <graphic>
+            <FontIcon iconLiteral="fas-globe">
+                     <styleClass>
+                        <String fx:value="dashboard-icon-glyph" />
+                        <String fx:value="path-node-icon" />
+                     </styleClass></FontIcon>
+          </graphic>
         </Label>
         <Label id="secondaryDnsLink" fx:id="secondaryDnsLink" text="- - - -">
           <styleClass>
@@ -38,6 +53,13 @@
             <String fx:value="path-node" />
             <String fx:value="path-node-active" />
           </styleClass>
+          <graphic>
+            <FontIcon iconLiteral="fas-server">
+                     <styleClass>
+                        <String fx:value="dashboard-icon-glyph" />
+                        <String fx:value="path-node-icon" />
+                     </styleClass></FontIcon>
+          </graphic>
         </Label>
         <Label text="- - -">
           <styleClass>
@@ -50,6 +72,13 @@
             <String fx:value="path-node" />
             <String fx:value="path-node-fallback" />
           </styleClass>
+          <graphic>
+            <FontIcon iconLiteral="fas-server">
+                     <styleClass>
+                        <String fx:value="dashboard-icon-glyph" />
+                        <String fx:value="path-node-icon" />
+                     </styleClass></FontIcon>
+          </graphic>
         </Label>
       </children>
     </HBox>
@@ -76,6 +105,19 @@
         <Label styleClass="metric-label" text="SECONDARY IPV6 DNS" GridPane.columnIndex="0" GridPane.rowIndex="6" />
         <Label id="secondaryIpv6DnsValue" fx:id="secondaryIpv6DnsValue" styleClass="metric-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="6" />
       </children>
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
     </GridPane>
     <HBox styleClass="network-summary">
       <children>

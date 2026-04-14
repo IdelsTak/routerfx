@@ -2,33 +2,60 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<?import org.kordamp.ikonli.fontawesome5.*?>
+<?import org.kordamp.ikonli.fontawesome6.*?>
 
 <VBox id="topStatusCard" styleClass="card-surface" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
   <children>
     <Label styleClass="card-title" text="TOP STATUS STRIP" />
     <GridPane styleClass="status-strip-grid">
       <children>
-        <Label styleClass="metric-icon" text="NET" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label id="networkTypeIcon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="0">
+          <graphic>
+            <FontIcon iconLiteral="fas-signal" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="NETWORK TYPE" GridPane.columnIndex="1" GridPane.rowIndex="0" />
         <Label id="networkTypeValue" fx:id="networkTypeValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-        <Label styleClass="metric-icon" text="SIM" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label id="simIcon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="1">
+          <graphic>
+            <FontIcon iconLiteral="fas-sim-card" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="SIM" GridPane.columnIndex="1" GridPane.rowIndex="1" />
         <Label id="simValue" fx:id="simValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
-        <Label styleClass="metric-icon" text="AT" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label id="atIcon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="2">
+          <graphic>
+            <FontIcon iconLiteral="fas-broadcast-tower" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="AT" GridPane.columnIndex="1" GridPane.rowIndex="2" />
         <Label id="atValue" fx:id="atValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
-        <Label styleClass="metric-icon" text="W24" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label id="wifi24Icon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="3">
+          <graphic>
+            <FontIcon iconLiteral="fas-wifi" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="2.4 GHZ WI-FI" GridPane.columnIndex="1" GridPane.rowIndex="3" />
         <Label id="wifi24Value" fx:id="wifi24Value" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-        <Label styleClass="metric-icon" text="W5" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <Label id="wifi5Icon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="4">
+          <graphic>
+            <FontIcon iconLiteral="fas-wifi" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="5 GHZ WI-FI" GridPane.columnIndex="1" GridPane.rowIndex="4" />
         <Label id="wifi5Value" fx:id="wifi5Value" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="4" />
 
-        <Label styleClass="metric-icon" text="LAN" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <Label id="lanIcon" styleClass="metric-icon" GridPane.columnIndex="0" GridPane.rowIndex="5">
+          <graphic>
+            <FontIcon iconLiteral="fas-network-wired" styleClass="dashboard-icon-glyph" />
+          </graphic>
+        </Label>
         <Label styleClass="metric-label" text="LAN" GridPane.columnIndex="1" GridPane.rowIndex="5" />
         <Label id="lanValue" fx:id="lanValue" styleClass="metric-value" text="-" GridPane.columnIndex="2" GridPane.rowIndex="5" />
       </children>

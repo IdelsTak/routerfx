@@ -108,7 +108,10 @@
     -fx-border-radius: 14px;
     -fx-border-width: 0.5px;
     -fx-font-family: 'Geist Medium';
-    -fx-font-size: 10px
+    -fx-font-size: 10px;
+    -fx-graphic-text-gap: 6px;
+    -fx-content-display: left;
+    -fx-alignment: center-left
 }
 .path-link {
     -fx-font-family: 'JetBrains Mono Regular';
@@ -182,10 +185,33 @@
     -fx-background-radius: 8px;
     -fx-border-radius: 8px;
     -fx-border-width: 0.5px;
-    -fx-padding: 2 6 2 6;
+    -fx-padding: 2 5 2 5;
+    -fx-min-width: 24px;
+    -fx-pref-width: 24px;
+    -fx-max-width: 24px;
+    -fx-min-height: 18px;
+    -fx-pref-height: 18px;
+    -fx-max-height: 18px;
+    -fx-alignment: center;
     -fx-font-family: 'Geist Medium';
     -fx-font-size: 10px;
     -fx-text-fill: -fx-text-secondary
+}
+.dashboard-icon-glyph {
+    -fx-icon-size: 11;
+    -fx-icon-color: -fx-text-secondary
+}
+.path-node-icon {
+    -fx-icon-size: 10
+}
+.path-node-active .path-node-icon {
+    -fx-icon-color: -fx-accent-success-ink
+}
+.path-node-inactive .path-node-icon {
+    -fx-icon-color: -fx-text-muted
+}
+.path-node-fallback .path-node-icon {
+    -fx-icon-color: -fx-accent-warning-ink
 }
 .metric-value {
     -fx-font-size: 12px;

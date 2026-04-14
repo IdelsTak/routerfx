@@ -14,6 +14,7 @@ import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
 import org.junit.jupiter.api.*;
+import org.kordamp.ikonli.javafx.*;
 import org.testfx.framework.junit5.*;
 import org.testfx.util.*;
 import static org.hamcrest.MatcherAssert.*;
@@ -88,6 +89,31 @@ final class DesktopAppTest extends ApplicationTest {
         assertThat("Expected internet node to be visible in network path card", lookup("#internetPathNode").query().isVisible(), is(true));
         assertThat("Expected primary DNS node to be visible in network path card", lookup("#primaryDnsPathNode").query().isVisible(), is(true));
         assertThat("Expected secondary DNS node to be visible in network path card", lookup("#secondaryDnsPathNode").query().isVisible(), is(true));
+    }
+
+    @Test
+    void preLoginUsesIkonliGlyphsForTopStripAndFooterIcons() {
+        List<String> failures = new ArrayList<>();
+        checkIconGraphic("#networkTypeIcon", failures);
+        checkIconGraphic("#simIcon", failures);
+        checkIconGraphic("#atIcon", failures);
+        checkIconGraphic("#wifi24Icon", failures);
+        checkIconGraphic("#wifi5Icon", failures);
+        checkIconGraphic("#lanIcon", failures);
+        checkIconGraphic("#runningTimeIcon", failures);
+        checkIconGraphic("#firmwareIcon", failures);
+        checkIconGraphic("#antennaIcon", failures);
+        assertTrue(failures.isEmpty(), "Expected top-strip and footer icon chips to use shared Ikonli glyphs; mismatches: " + String.join(", ", failures));
+    }
+
+    @Test
+    void preLoginUsesIkonliGlyphsForNetworkPathNodes() {
+        List<String> failures = new ArrayList<>();
+        checkPathIconGraphic("#routerPathNode", failures);
+        checkPathIconGraphic("#internetPathNode", failures);
+        checkPathIconGraphic("#primaryDnsPathNode", failures);
+        checkPathIconGraphic("#secondaryDnsPathNode", failures);
+        assertTrue(failures.isEmpty(), "Expected network path nodes to use shared Ikonli glyphs with path icon styling; mismatches: " + String.join(", ", failures));
     }
 
     @Test
@@ -668,6 +694,33 @@ final class DesktopAppTest extends ApplicationTest {
     private void checkMetricRangeFill(String metric, String expectedTone, Region fill, List<String> failures) {
         if (!fill.getStyleClass().contains(expectedTone)) {
             failures.add(metric + " expected range fill tone " + expectedTone + " but had " + fill.getStyleClass());
+        }
+    }
+
+    private void checkIconGraphic(String id, List<String> failures) {
+        Label label = lookup(id).queryAs(Label.class);
+        Node graphic = label.getGraphic();
+        if (!(graphic instanceof FontIcon icon)) {
+            failures.add(id + " expected FontIcon graphic but found " + graphic);
+            return;
+        }
+        if (!icon.getStyleClass().contains("dashboard-icon-glyph")) {
+            failures.add(id + " expected dashboard-icon-glyph style but had " + icon.getStyleClass());
+        }
+    }
+
+    private void checkPathIconGraphic(String id, List<String> failures) {
+        Label label = lookup(id).queryAs(Label.class);
+        Node graphic = label.getGraphic();
+        if (!(graphic instanceof FontIcon icon)) {
+            failures.add(id + " expected FontIcon graphic but found " + graphic);
+            return;
+        }
+        if (!icon.getStyleClass().contains("dashboard-icon-glyph")) {
+            failures.add(id + " expected dashboard-icon-glyph style but had " + icon.getStyleClass());
+        }
+        if (!icon.getStyleClass().contains("path-node-icon")) {
+            failures.add(id + " expected path-node-icon style but had " + icon.getStyleClass());
         }
     }
 
